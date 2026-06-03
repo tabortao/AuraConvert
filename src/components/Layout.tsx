@@ -1,3 +1,4 @@
+import { TitleBar } from "./TitleBar";
 import { ThemeToggle } from "./ThemeToggle";
 import { SettingsPanel } from "./SettingsPanel";
 import { DropZone } from "./DropZone";
@@ -50,24 +51,27 @@ export function Layout() {
   useKeyboardShortcuts(shortcuts);
 
   return (
-    <div className="flex h-screen flex-col bg-background text-foreground">
-      {/* Header */}
-      <header className="flex h-14 shrink-0 items-center justify-between border-b border-border px-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20">
-            <span className="text-lg">🎵</span>
+    <div className="flex h-screen flex-col bg-background text-foreground overflow-hidden rounded-lg">
+      {/* Custom Title Bar */}
+      <TitleBar />
+
+      {/* App Header */}
+      <header className="flex h-12 shrink-0 items-center justify-between border-b border-border px-5">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/20">
+            <span className="text-sm">🎵</span>
           </div>
-          <div>
-            <span className="text-base font-semibold text-foreground">
+          <div className="flex items-baseline gap-2">
+            <span className="text-sm font-semibold text-foreground">
               AuraConvert
             </span>
-            <span className="ml-2 text-xs text-muted-foreground">v1.0.0</span>
+            <span className="text-[11px] text-muted-foreground">v1.0.0</span>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           {/* FFmpeg Status Indicator */}
           <div
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
+            className={`flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
               status?.found
                 ? "bg-primary/15 text-primary"
                 : "bg-destructive/15 text-destructive"
