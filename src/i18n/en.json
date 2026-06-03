@@ -1,0 +1,97 @@
+{
+  "app": {
+    "title": "AuraConvert",
+    "subtitle": "AudioForge",
+    "version": "v1.0.0"
+  },
+  "ffmpeg": {
+    "config": "FFmpeg Settings",
+    "status": "Status",
+    "found": "Found",
+    "notFound": "FFmpeg Not Found",
+    "detecting": "Detecting...",
+    "version": "Version",
+    "path": "FFmpeg Path",
+    "pathPlaceholder": "FFmpeg path",
+    "browse": "Browse",
+    "redetect": "Redetect",
+    "downloadPrompt": "FFmpeg not detected. Please download and install it, then configure the path.",
+    "downloadLink": "Download FFmpeg",
+    "downloadUrl": "https://www.gyan.dev/ffmpeg/builds/",
+    "ok": "FFmpeg ✓",
+    "fail": "FFmpeg ✗"
+  },
+  "dropzone": {
+    "title": "Drop files here, or click to select",
+    "subtitle": "Supports audio and video files",
+    "selectFiles": "Select Files",
+    "selectFolder": "Select Folder"
+  },
+  "fileList": {
+    "empty": "No files",
+    "emptyHint": "Drag and drop audio or video files above",
+    "totalFiles": "{{count}} files total",
+    "clearList": "Clear list",
+    "completed": "completed",
+    "pending": "pending"
+  },
+  "fileItem": {
+    "compress": "Compressed {{percent}}%",
+    "expand": "Expanded {{percent}}%",
+    "showInfo": "View audio info"
+  },
+  "settings": {
+    "outputFormat": "Output Format",
+    "params": "Parameters",
+    "bitrate": "Bitrate",
+    "sampleRate": "Sample Rate",
+    "channels": "Channels",
+    "mono": "Mono",
+    "stereo": "Stereo",
+    "volume": "Volume",
+    "speed": "Speed",
+    "bitDepth": "Bit Depth",
+    "outputDir": "Output Directory",
+    "sameAsSource": "Same as source",
+    "customDir": "Custom directory",
+    "askEachTime": "Ask each time",
+    "lossless": "Lossless",
+    "lossy": "Lossy"
+  },
+  "conversion": {
+    "start": "Start Conversion",
+    "cancel": "Cancel",
+    "clear": "Clear",
+    "totalProgress": "Total Progress",
+    "eta": "ETA",
+    "noFiles": "Please add files first",
+    "ffmpegRequired": "Please configure FFmpeg first"
+  },
+  "audioInfo": {
+    "title": "Audio Info",
+    "loading": "Loading...",
+    "titleField": "Title",
+    "artist": "Artist",
+    "album": "Album",
+    "year": "Year",
+    "genre": "Genre",
+    "format": "Format",
+    "bitrate": "Bitrate",
+    "sampleRate": "Sample Rate",
+    "channels": "Channels",
+    "bitDepth": "Bit Depth",
+    "duration": "Duration",
+    "fileSize": "File Size",
+    "codec": "Codec"
+  },
+  "progress": {
+    "completed": "Completed",
+    "failed": "Failed",
+    "cancelled": "Cancelled",
+    "converting": "Converting"
+  },
+  "theme": {
+    "dark": "Dark theme",
+    "light": "Light theme"
+  }
+}

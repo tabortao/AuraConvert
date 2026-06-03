@@ -1,0 +1,97 @@
+{
+  "app": {
+    "title": "AuraConvert",
+    "subtitle": "音擎",
+    "version": "v1.0.0"
+  },
+  "ffmpeg": {
+    "config": "FFmpeg 配置",
+    "status": "状态",
+    "found": "已找到",
+    "notFound": "未找到 FFmpeg",
+    "detecting": "检测中...",
+    "version": "版本",
+    "path": "FFmpeg 路径",
+    "pathPlaceholder": "FFmpeg 路径",
+    "browse": "浏览",
+    "redetect": "重新检测",
+    "downloadPrompt": "未检测到 FFmpeg，请下载安装后配置路径。",
+    "downloadLink": "下载 FFmpeg",
+    "downloadUrl": "https://www.gyan.dev/ffmpeg/builds/",
+    "ok": "FFmpeg ✓",
+    "fail": "FFmpeg ✗"
+  },
+  "dropzone": {
+    "title": "拖拽文件到此处，或点击选择",
+    "subtitle": "支持音频和视频文件",
+    "selectFiles": "选择文件",
+    "selectFolder": "选择文件夹"
+  },
+  "fileList": {
+    "empty": "暂无文件",
+    "emptyHint": "拖拽音频或视频文件到上方区域",
+    "totalFiles": "共 {{count}} 个文件",
+    "clearList": "清空列表",
+    "completed": "已完成",
+    "pending": "待转换"
+  },
+  "fileItem": {
+    "compress": "压缩 {{percent}}%",
+    "expand": "增大 {{percent}}%",
+    "showInfo": "查看音频信息"
+  },
+  "settings": {
+    "outputFormat": "输出格式",
+    "params": "参数设置",
+    "bitrate": "比特率",
+    "sampleRate": "采样率",
+    "channels": "声道",
+    "mono": "单声道",
+    "stereo": "立体声",
+    "volume": "音量",
+    "speed": "播放速度",
+    "bitDepth": "位深度",
+    "outputDir": "输出目录",
+    "sameAsSource": "与源文件相同",
+    "customDir": "自定义目录",
+    "askEachTime": "每次询问",
+    "lossless": "无损",
+    "lossy": "有损"
+  },
+  "conversion": {
+    "start": "开始转换",
+    "cancel": "取消",
+    "clear": "清空",
+    "totalProgress": "总进度",
+    "eta": "预计剩余",
+    "noFiles": "请先添加文件",
+    "ffmpegRequired": "请先配置 FFmpeg"
+  },
+  "audioInfo": {
+    "title": "音频信息",
+    "loading": "加载中...",
+    "titleField": "标题",
+    "artist": "艺术家",
+    "album": "专辑",
+    "year": "年份",
+    "genre": "流派",
+    "format": "格式",
+    "bitrate": "比特率",
+    "sampleRate": "采样率",
+    "channels": "声道",
+    "bitDepth": "位深度",
+    "duration": "时长",
+    "fileSize": "文件大小",
+    "codec": "编码器"
+  },
+  "progress": {
+    "completed": "已完成",
+    "failed": "失败",
+    "cancelled": "已取消",
+    "converting": "转换中"
+  },
+  "theme": {
+    "dark": "暗色主题",
+    "light": "亮色主题"
+  }
+}

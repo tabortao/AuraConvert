@@ -1,0 +1,43 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nickel-org/tauri/dev/crates/tauri-cli/schema.json",
+  "productName": "AuraConvert",
+  "version": "1.0.0",
+  "identifier": "com.auraconvert",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420",
+    "beforeDevCommand": "pnpm dev",
+    "beforeBuildCommand": "pnpm build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "AuraConvert - 音擎",
+        "width": 1100,
+        "height": 720,
+        "minWidth": 900,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": [
+      "icons/icon.ico",
+      "icons/icon.png"
+    ],
+    "resources": []
+  },
+  "plugins": {
+    "shell": {
+      "open": true
+    }
+  }
+}
