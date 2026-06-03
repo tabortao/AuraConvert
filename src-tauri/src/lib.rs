@@ -26,6 +26,7 @@ pub fn run() {
             commands::file_ops::select_files,
             commands::file_ops::select_output_dir,
             commands::file_ops::select_ffmpeg_exe,
+            commands::file_ops::get_file_metadata,
         ])
         .setup(|app| {
             // Initialize default settings

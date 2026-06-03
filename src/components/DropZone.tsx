@@ -41,21 +41,29 @@ export function DropZone() {
   const handleSelectFiles = async () => {
     const selected = await invoke<string[]>("select_files");
     if (selected && selected.length > 0) {
-      addFiles(
-        selected.map((p) => {
+      const filesWithSize = await Promise.all(
+        selected.map(async (p) => {
           const name = p.split(/[\\/]/).pop() || p;
+          let size = 0;
+          try {
+            const meta = await invoke<{ size: number }>("get_file_metadata", { path: p });
+            size = meta.size;
+          } catch {
+            // fallback: size stays 0
+          }
           return {
             id: crypto.randomUUID(),
             path: p,
             name,
             extension: name.split(".").pop()?.toLowerCase() || "",
-            size: 0,
+            size,
             isVideo: false,
             status: "pending" as const,
             progress: 0,
           };
         })
       );
+      addFiles(filesWithSize);
     }
   };
 

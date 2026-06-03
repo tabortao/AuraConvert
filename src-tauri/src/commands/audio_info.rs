@@ -5,6 +5,7 @@ use base64::Engine;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tauri::AppHandle;
+use tauri_plugin_fs::FsExt;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AudioInfo {
@@ -28,9 +29,23 @@ pub struct AudioInfo {
 #[tauri::command]
 pub async fn read_audio_info(app: AppHandle, file_path: String) -> Result<AudioInfo, String> {
     let path = Path::new(&file_path);
-    let file_size = std::fs::metadata(path)
+
+    // Get file size using Tauri fs scope for proper permission handling
+    let mut opts = tauri_plugin_fs::OpenOptions::new();
+    opts.read(true);
+    let file_size = app
+        .fs()
+        .open(
+            tauri_plugin_fs::FilePath::from(path),
+            opts,
+        )
+        .ok()
+        .and_then(|f| f.metadata().ok())
         .map(|m| m.len())
-        .unwrap_or(0);
+        .unwrap_or_else(|| {
+            // Fallback to std::fs
+            std::fs::metadata(path).map(|m| m.len()).unwrap_or(0)
+        });
 
     // Try lofty for audio files
     match lofty::read_from_path(path) {

@@ -1,4 +1,31 @@
+use serde::{Deserialize, Serialize};
+use std::path::Path;
 use tauri_plugin_dialog::DialogExt;
+use tauri_plugin_fs::FsExt;
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct FileMetadata {
+    pub size: u64,
+}
+
+#[tauri::command]
+pub async fn get_file_metadata(app: tauri::AppHandle, path: String) -> Result<FileMetadata, String> {
+    let mut opts = tauri_plugin_fs::OpenOptions::new();
+    opts.read(true);
+    let file = app
+        .fs()
+        .open(
+            tauri_plugin_fs::FilePath::from(Path::new(&path)),
+            opts,
+        )
+        .map_err(|e| format!("Failed to open file: {}", e))?;
+
+    let metadata = file.metadata().map_err(|e| format!("Failed to read metadata: {}", e))?;
+
+    Ok(FileMetadata {
+        size: metadata.len(),
+    })
+}
 
 #[tauri::command]
 pub async fn select_files(app: tauri::AppHandle) -> Result<Vec<String>, String> {
