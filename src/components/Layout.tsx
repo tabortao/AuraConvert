@@ -8,6 +8,7 @@ import { useConversion } from "../hooks/useConversion";
 import { useConversionStore } from "../stores/conversionStore";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { useMemo } from "react";
+import { Github } from "lucide-react";
 
 export function Layout() {
   const { status } = useFFmpeg();
@@ -62,6 +63,16 @@ export function Layout() {
           />
           FFmpeg {status?.found ? "✓" : "✗"}
         </div>
+        {/* GitHub Link */}
+        <a
+          href="https://github.com/tabortao/AuraConvert"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          title="GitHub"
+        >
+          <Github size={15} />
+        </a>
       </div>
 
       {/* Main Content */}

@@ -32,6 +32,14 @@ pub fn build_ffmpeg_args(
         args.push("-vn".to_string());
     }
 
+    // Map streams: audio + any attached pictures (cover art)
+    if !is_video {
+        args.push("-map".to_string());
+        args.push("0:a".to_string());
+        args.push("-map".to_string());
+        args.push("0:v?".to_string());
+    }
+
     // Build audio filter chain
     let mut filters: Vec<String> = vec![];
 
@@ -109,13 +117,15 @@ pub fn build_ffmpeg_args(
         }
     }
 
-    // Preserve metadata (cover art, tags)
+    // Preserve metadata (title, artist, album, cover art, etc.)
+    // -map_metadata 0 copies all global metadata from input to output
     args.push("-map_metadata".to_string());
     args.push("0".to_string());
 
-    // For video files with cover art, also copy video stream for cover
-    if is_video {
-        // Don't copy video stream (we used -vn above)
+    // Copy cover art video stream as-is (for audio files with embedded artwork)
+    if !is_video {
+        args.push("-c:v".to_string());
+        args.push("copy".to_string());
     }
 
     // Format-specific extra args
