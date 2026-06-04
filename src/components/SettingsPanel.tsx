@@ -8,7 +8,8 @@ import {
   FolderSearch,
   ExternalLink,
   Settings,
-  FolderOutput,
+  Music,
+  Sliders,
 } from "lucide-react";
 import { FormatSelector } from "./FormatSelector";
 import { ParamPanel } from "./ParamPanel";
@@ -19,10 +20,9 @@ export function SettingsPanel() {
   const [ffmpegPath, setFfmpegPath] = useState(status?.path || "");
   const { t } = useTranslation();
   const [sections, setSections] = useState({
-    ffmpeg: true,
+    ffmpeg: false,
     format: true,
-    params: true,
-    output: true,
+    params: false,
   });
 
   const toggleSection = (key: keyof typeof sections) => {
@@ -48,32 +48,39 @@ export function SettingsPanel() {
   }) => (
     <button
       onClick={() => toggleSection(sectionKey)}
-      className="flex w-full items-center gap-2 py-2 text-sm font-medium text-foreground transition-colors hover:text-primary"
+      className="flex w-full items-center gap-2 px-4 py-2.5 text-[12px] font-semibold text-foreground transition-colors hover:bg-card/50"
     >
-      <Icon size={16} className="text-muted-foreground" />
+      <Icon size={14} className="text-primary" />
       <span className="flex-1 text-left">{title}</span>
       {sections[sectionKey] ? (
-        <ChevronDown size={14} className="text-muted-foreground" />
+        <ChevronDown size={13} className="text-muted-foreground" />
       ) : (
-        <ChevronRight size={14} className="text-muted-foreground" />
+        <ChevronRight size={13} className="text-muted-foreground" />
       )}
     </button>
   );
 
   return (
-    <div className="flex flex-col gap-1 p-4">
-      {/* FFmpeg Section */}
+    <div className="flex flex-col">
+      {/* Output Format Section (default expanded) */}
+      <SectionHeader icon={Music} title={t("settings.outputFormat")} sectionKey="format" />
+      {sections.format && (
+        <div className="border-b border-sidebar-border px-4 pb-3">
+          <FormatSelector />
+        </div>
+      )}
+
+      {/* FFmpeg Section (default collapsed) */}
       <SectionHeader icon={Settings} title={t("ffmpeg.config")} sectionKey="ffmpeg" />
       {sections.ffmpeg && (
-        <div className="ml-6 flex flex-col gap-3 pb-3">
-          {/* Status */}
+        <div className="flex flex-col gap-2.5 border-b border-sidebar-border px-4 pb-3">
           <div className="flex items-center gap-2">
             <div
               className={`h-2 w-2 rounded-full ${
                 status?.found ? "bg-primary" : "bg-destructive"
               }`}
             />
-            <span className="text-xs">
+            <span className="text-[11px] text-muted-foreground">
               {loading
                 ? t("ffmpeg.detecting")
                 : status?.found
@@ -81,39 +88,33 @@ export function SettingsPanel() {
                   : t("ffmpeg.notFound")}
             </span>
           </div>
-
-          {/* Path Input */}
           <div className="flex gap-1.5">
             <input
               type="text"
               value={ffmpegPath}
               onChange={(e) => setFfmpegPath(e.target.value)}
               placeholder={t("ffmpeg.pathPlaceholder")}
-              className="flex-1 rounded-lg border border-border bg-input px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none"
+              className="flex-1 rounded-md border border-border bg-background px-2.5 py-1.5 text-[11px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
             />
             <button
               onClick={handleBrowse}
-              className="rounded-lg bg-secondary px-2 py-1.5 text-xs text-secondary-foreground transition-colors hover:bg-secondary/80"
+              className="rounded-md bg-secondary px-2 py-1.5 text-secondary-foreground transition-colors hover:bg-muted"
               title={t("ffmpeg.browse")}
             >
-              <FolderSearch size={14} />
+              <FolderSearch size={13} />
             </button>
             <button
               onClick={detect}
               disabled={loading}
-              className="rounded-lg bg-secondary px-2 py-1.5 text-xs text-secondary-foreground transition-colors hover:bg-secondary/80"
+              className="rounded-md bg-secondary px-2 py-1.5 text-secondary-foreground transition-colors hover:bg-muted"
               title={t("ffmpeg.redetect")}
             >
-              <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+              <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
             </button>
           </div>
-
-          {/* Download Prompt */}
           {!status?.found && (
-            <div className="rounded-lg bg-destructive/10 p-2.5 text-xs text-destructive">
-              <p className="mb-1.5">
-                {t("ffmpeg.downloadPrompt")}
-              </p>
+            <div className="rounded-md bg-destructive/5 p-2 text-[11px] text-destructive">
+              <p className="mb-1">{t("ffmpeg.downloadPrompt")}</p>
               <a
                 href="https://www.gyan.dev/ffmpeg/builds/"
                 target="_blank"
@@ -127,49 +128,11 @@ export function SettingsPanel() {
         </div>
       )}
 
-      <div className="border-t border-border" />
-
-      {/* Output Format Section */}
-      <SectionHeader icon={Settings} title={t("settings.outputFormat")} sectionKey="format" />
-      {sections.format && (
-        <div className="ml-6 pb-3">
-          <FormatSelector />
-        </div>
-      )}
-
-      <div className="border-t border-border" />
-
-      {/* Parameters Section */}
-      <SectionHeader icon={Settings} title={t("settings.params")} sectionKey="params" />
+      {/* Parameters Section (default collapsed) */}
+      <SectionHeader icon={Sliders} title={t("settings.params")} sectionKey="params" />
       {sections.params && (
-        <div className="ml-6 pb-3">
+        <div className="border-b border-sidebar-border px-4 pb-3">
           <ParamPanel />
-        </div>
-      )}
-
-      <div className="border-t border-border" />
-
-      {/* Output Directory Section */}
-      <SectionHeader icon={FolderOutput} title={t("settings.outputDir")} sectionKey="output" />
-      {sections.output && (
-        <div className="ml-6 flex flex-col gap-2 pb-3">
-          <label className="flex items-center gap-2 text-xs">
-            <input
-              type="radio"
-              name="outputDir"
-              defaultChecked
-              className="accent-primary"
-            />
-            {t("settings.sameAsSource")}
-          </label>
-          <label className="flex items-center gap-2 text-xs">
-            <input type="radio" name="outputDir" className="accent-primary" />
-            {t("settings.customDir")}
-          </label>
-          <label className="flex items-center gap-2 text-xs">
-            <input type="radio" name="outputDir" className="accent-primary" />
-            {t("settings.askEachTime")}
-          </label>
         </div>
       )}
     </div>

@@ -1,14 +1,26 @@
 import { useState } from "react";
 import { useAudioInfo } from "../hooks/useAudioInfo";
 import { formatFileSize, formatDuration } from "../utils/fileUtils";
-import { CheckCircle, XCircle, Loader2, Info, Music, Clock, HardDrive, Disc, Mic2, Tag } from "lucide-react";
+import {
+  CheckCircle,
+  XCircle,
+  Loader2,
+  Info,
+  Music,
+  Clock,
+  HardDrive,
+  Disc,
+  Mic2,
+  Tag,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 interface FileItemProps {
   file: import("../types").AudioFile;
+  index?: number;
 }
 
-export function FileItem({ file }: FileItemProps) {
+export function FileItem({ file, index }: FileItemProps) {
   const { t } = useTranslation();
   const [showInfo, setShowInfo] = useState(false);
   const { info, loading, fetchInfo } = useAudioInfo();
@@ -23,13 +35,13 @@ export function FileItem({ file }: FileItemProps) {
   const statusIcon = () => {
     switch (file.status) {
       case "completed":
-        return <CheckCircle size={16} className="text-primary" />;
+        return <CheckCircle size={14} className="text-primary" />;
       case "failed":
-        return <XCircle size={16} className="text-destructive" />;
+        return <XCircle size={14} className="text-destructive" />;
       case "converting":
-        return <Loader2 size={16} className="animate-spin text-primary" />;
+        return <Loader2 size={14} className="animate-spin text-primary" />;
       default:
-        return <Music size={16} className="text-muted-foreground" />;
+        return <Music size={14} className="text-muted-foreground/50" />;
     }
   };
 
@@ -50,112 +62,130 @@ export function FileItem({ file }: FileItemProps) {
       case "converting":
         return `${file.progress.toFixed(1)}%`;
       default:
-        return formatFileSize(file.size);
+        return "等待中";
     }
   };
 
-  // Use file.size as fallback when info.fileSize is 0
   const displayFileSize = info?.fileSize && info.fileSize > 0 ? info.fileSize : file.size;
 
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3">
-      <div className="flex items-center gap-3">
-        {statusIcon()}
-        <div className="flex-1 min-w-0">
-          <p className="truncate text-sm font-medium text-foreground">{file.name}</p>
-          <p className="text-xs text-muted-foreground">{statusText()}</p>
+    <div className="flex flex-col border-b border-border/50 last:border-b-0">
+      {/* Main Row */}
+      <div className="flex items-center px-4 py-2.5 text-[12px] transition-colors hover:bg-card/80">
+        <div className="w-8 text-center text-muted-foreground/50">
+          {index !== undefined ? index + 1 : ""}
         </div>
-        <button
-          onClick={handleShowInfo}
-          className="flex items-center gap-1 rounded-lg bg-secondary px-2 py-1 text-xs text-secondary-foreground transition-colors hover:bg-secondary/80"
-        >
-          <Info size={12} />
-          {t("fileItem.showInfo")}
-        </button>
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          {statusIcon()}
+          <span className="truncate font-medium text-foreground">{file.name}</span>
+        </div>
+        <div className="w-16 text-center text-muted-foreground">
+          {file.extension.toUpperCase()}
+        </div>
+        <div className="w-20 text-right text-muted-foreground">
+          {displayFileSize > 0 ? formatFileSize(displayFileSize) : "-"}
+        </div>
+        <div className="w-20 text-right text-muted-foreground">
+          {info?.duration && info.duration > 0
+            ? formatDuration(info.duration)
+            : "-"}
+        </div>
+        <div className="w-24 text-center">
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+              file.status === "completed"
+                ? "bg-primary/10 text-primary"
+                : file.status === "failed"
+                  ? "bg-destructive/10 text-destructive"
+                  : file.status === "converting"
+                    ? "bg-primary/10 text-primary"
+                    : "bg-muted text-muted-foreground"
+            }`}
+          >
+            {statusText()}
+          </span>
+        </div>
+        <div className="w-16 text-center">
+          <button
+            onClick={handleShowInfo}
+            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          >
+            <Info size={12} />
+          </button>
+        </div>
       </div>
 
+      {/* Progress bar */}
       {file.status === "converting" && file.progress > 0 && (
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
-          <div
-            className="h-full rounded-full bg-primary transition-all duration-300"
-            style={{ width: `${file.progress}%` }}
-          />
+        <div className="px-4 pb-2">
+          <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-300"
+              style={{ width: `${file.progress}%` }}
+            />
+          </div>
         </div>
       )}
 
+      {/* Audio Info Panel */}
       {showInfo && (
-        <div className="mt-1 rounded-lg bg-secondary/50 p-2.5">
+        <div className="border-t border-border/50 bg-card/50 px-4 py-2.5">
           {loading ? (
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Loader2 size={14} className="animate-spin" />
               {t("audioInfo.loading")}
             </div>
           ) : info ? (
-            <div className="flex flex-col gap-1.5 text-xs">
-              {/* Row 1: format · bitrate · channels · sample rate · duration · file size */}
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-muted-foreground">
-                <span className="inline-flex items-center gap-1 rounded bg-background/60 px-1.5 py-0.5 font-medium text-foreground">
-                  <Disc size={11} className="text-primary" />
-                  {info.format}
+            <div className="flex items-center gap-x-2.5 gap-y-0.5 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1 rounded bg-primary/10 px-1.5 py-0.5 font-medium text-primary">
+                <Disc size={11} />
+                {info.format}
+              </span>
+              {info.bitrate > 0 && <span>{Math.round(info.bitrate / 1000)} kbps</span>}
+              {info.sampleRate > 0 && <span>{info.sampleRate / 1000} kHz</span>}
+              {info.channels > 0 && <span>{info.channels === 1 ? "单声道" : "立体声"}</span>}
+              {info.duration > 0 && (
+                <span className="inline-flex items-center gap-1">
+                  <Clock size={11} />
+                  {formatDuration(info.duration)}
                 </span>
-                {info.bitrate > 0 && (
-                  <span>{Math.round(info.bitrate / 1000)} kbps</span>
-                )}
-                {info.sampleRate > 0 && (
-                  <span>{info.sampleRate / 1000} kHz</span>
-                )}
-                {info.channels > 0 && (
-                  <span>{info.channels === 1 ? "单声道" : "立体声"}</span>
-                )}
-                {info.duration > 0 && (
-                  <span className="inline-flex items-center gap-1">
-                    <Clock size={11} />
-                    {formatDuration(info.duration)}
-                  </span>
-                )}
-                {displayFileSize > 0 && (
-                  <span className="inline-flex items-center gap-1">
-                    <HardDrive size={11} />
-                    {formatFileSize(displayFileSize)}
-                  </span>
-                )}
-              </div>
-
-              {/* Row 2: title · artist · album · year · genre + cover */}
-              <div className="flex items-center gap-x-3 gap-y-0.5 text-muted-foreground">
-                {info.title && (
-                  <span className="truncate max-w-[160px] font-medium text-foreground" title={info.title}>
-                    {info.title}
-                  </span>
-                )}
-                {info.artist && (
-                  <span className="truncate max-w-[120px]" title={info.artist}>
-                    <Mic2 size={11} className="inline -mt-px mr-0.5" />
-                    {info.artist}
-                  </span>
-                )}
-                {info.album && (
-                  <span className="truncate max-w-[120px]" title={info.album}>
-                    {info.album}
-                  </span>
-                )}
-                {info.year && (
-                  <span>{info.year}</span>
-                )}
-                {info.genre && (
-                  <span>
-                    <Tag size={11} className="inline -mt-px mr-0.5" />
-                    {info.genre}
-                  </span>
-                )}
-                {info.coverArt && (
-                  <img
-                    src={info.coverArt}
-                    alt="Cover"
-                    className="ml-auto h-8 w-8 rounded object-cover flex-shrink-0"
-                  />
-                )}
-              </div>
+              )}
+              {displayFileSize > 0 && (
+                <span className="inline-flex items-center gap-1">
+                  <HardDrive size={11} />
+                  {formatFileSize(displayFileSize)}
+                </span>
+              )}
+              {info.title && (
+                <span className="truncate max-w-[120px] font-medium text-foreground" title={info.title}>
+                  {info.title}
+                </span>
+              )}
+              {info.artist && (
+                <span className="truncate max-w-[100px]" title={info.artist}>
+                  <Mic2 size={11} className="inline -mt-px mr-0.5" />
+                  {info.artist}
+                </span>
+              )}
+              {info.album && (
+                <span className="truncate max-w-[100px]" title={info.album}>
+                  {info.album}
+                </span>
+              )}
+              {info.year && <span>{info.year}</span>}
+              {info.genre && (
+                <span>
+                  <Tag size={11} className="inline -mt-px mr-0.5" />
+                  {info.genre}
+                </span>
+              )}
+              {info.coverArt && (
+                <img
+                  src={info.coverArt}
+                  alt="Cover"
+                  className="ml-auto h-7 w-7 rounded object-cover flex-shrink-0"
+                />
+              )}
             </div>
           ) : (
             <p className="text-xs text-muted-foreground">无法读取音频信息</p>

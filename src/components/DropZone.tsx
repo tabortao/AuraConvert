@@ -1,21 +1,24 @@
 import { useState } from "react";
 import { useConversionStore } from "../stores/conversionStore";
 import { invoke } from "@tauri-apps/api/core";
-import { FolderOpen, FilePlus } from "lucide-react";
+import { FolderOpen, FilePlus, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export function DropZone() {
   const addFiles = useConversionStore((s) => s.addFiles);
+  const clearFiles = useConversionStore((s) => s.clearFiles);
+  const files = useConversionStore((s) => s.files);
+  const isConverting = useConversionStore((s) => s.isConverting);
   const [isDragOver, setIsDragOver] = useState(false);
   const { t } = useTranslation();
 
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    if (droppedFiles.length > 0) {
       addFiles(
-        files.map((f) => ({
+        droppedFiles.map((f) => ({
           id: crypto.randomUUID(),
           path: (f as any).path || f.name,
           name: f.name,
@@ -49,7 +52,7 @@ export function DropZone() {
             const meta = await invoke<{ size: number }>("get_file_metadata", { path: p });
             size = meta.size;
           } catch {
-            // fallback: size stays 0
+            // fallback
           }
           return {
             id: crypto.randomUUID(),
@@ -70,7 +73,6 @@ export function DropZone() {
   const handleSelectFolder = async () => {
     const selected = await invoke<string | null>("select_output_dir");
     if (selected) {
-      // Folder scanning will be implemented in Phase 3
       console.log("Selected folder:", selected);
     }
   };
@@ -80,34 +82,33 @@ export function DropZone() {
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
-      className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 transition-all ${
-        isDragOver
-          ? "border-primary bg-primary/10"
-          : "border-border hover:border-muted-foreground/50"
+      className={`flex items-center gap-2 rounded-lg transition-all ${
+        isDragOver ? "bg-primary/5 ring-1 ring-primary/30" : ""
       }`}
     >
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <FolderOpen size={20} />
-        <span className="text-sm">
-          {t("dropzone.title")}
-        </span>
-      </div>
-      <div className="mt-3 flex gap-2">
+      <button
+        onClick={handleSelectFiles}
+        className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-[12px] font-medium text-foreground shadow-sm transition-all hover:bg-secondary hover:shadow"
+      >
+        <FilePlus size={14} className="text-primary" />
+        {t("dropzone.selectFiles")}
+      </button>
+      <button
+        onClick={handleSelectFolder}
+        className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-[12px] font-medium text-foreground shadow-sm transition-all hover:bg-secondary hover:shadow"
+      >
+        <FolderOpen size={14} className="text-primary" />
+        {t("dropzone.selectFolder")}
+      </button>
+      {!isConverting && files.length > 0 && (
         <button
-          onClick={handleSelectFiles}
-          className="flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-xs font-medium text-secondary-foreground transition-colors hover:bg-secondary/80"
+          onClick={clearFiles}
+          className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-[12px] font-medium text-destructive shadow-sm transition-all hover:bg-destructive/5 hover:shadow"
         >
-          <FilePlus size={14} />
-          {t("dropzone.selectFiles")}
+          <Trash2 size={14} />
+          {t("fileList.clearList")}
         </button>
-        <button
-          onClick={handleSelectFolder}
-          className="flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-xs font-medium text-secondary-foreground transition-colors hover:bg-secondary/80"
-        >
-          <FolderOpen size={14} />
-          {t("dropzone.selectFolder")}
-        </button>
-      </div>
+      )}
     </div>
   );
 }

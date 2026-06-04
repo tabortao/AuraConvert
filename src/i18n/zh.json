@@ -33,7 +33,13 @@
     "totalFiles": "共 {{count}} 个文件",
     "clearList": "清空列表",
     "completed": "已完成",
-    "pending": "待转换"
+    "pending": "待转换",
+    "fileName": "文件名",
+    "format": "格式",
+    "size": "大小",
+    "duration": "时长",
+    "status": "状态",
+    "actions": "操作"
   },
   "fileItem": {
     "compress": "压缩 {{percent}}%",

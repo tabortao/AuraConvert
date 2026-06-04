@@ -1,58 +1,82 @@
+import { useState } from "react";
 import { useConversionStore } from "../stores/conversionStore";
 import { useFFmpeg } from "../hooks/useFFmpeg";
 import { useConversion } from "../hooks/useConversion";
-import { Play, Square, Trash2 } from "lucide-react";
+import { Play, Square, FolderOutput } from "lucide-react";
+import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "react-i18next";
 
 export function ConvertButton() {
   const files = useConversionStore((s) => s.files);
   const isConverting = useConversionStore((s) => s.isConverting);
   const canCancel = useConversionStore((s) => s.canCancel);
-  const clearFiles = useConversionStore((s) => s.clearFiles);
   const { status: ffmpegStatus } = useFFmpeg();
   const { startConversion, cancelConversion } = useConversion();
   const { t } = useTranslation();
+  const [outputDir, setOutputDir] = useState<string | null>(null);
 
   const pendingFiles = files.filter((f) => f.status === "pending");
   const completedFiles = files.filter((f) => f.status === "completed");
   const canStart = pendingFiles.length > 0 && !isConverting && ffmpegStatus?.found;
 
+  const handleSelectDir = async () => {
+    const dir = await invoke<string | null>("select_output_dir");
+    if (dir) {
+      setOutputDir(dir);
+    }
+  };
+
   return (
-    <div className="flex items-center justify-between">
-      <div className="text-xs text-muted-foreground">
+    <div className="flex w-full items-center justify-between">
+      {/* Left: Stats */}
+      <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
         {files.length > 0 && (
-          <span>
-            {completedFiles.length} / {files.length} {t("fileList.completed")}
-            {pendingFiles.length > 0 && ` · ${pendingFiles.length} ${t("fileList.pending")}`}
-          </span>
+          <>
+            <span>
+              <span className="font-medium text-foreground">{completedFiles.length}</span>
+              {" / "}
+              {files.length} {t("fileList.completed")}
+            </span>
+            {pendingFiles.length > 0 && (
+              <span>
+                {pendingFiles.length} {t("fileList.pending")}
+              </span>
+            )}
+          </>
         )}
       </div>
-      <div className="flex gap-2">
-        {!isConverting && files.length > 0 && (
-          <button
-            onClick={clearFiles}
-            className="flex items-center gap-1.5 rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/80"
-          >
-            <Trash2 size={16} />
-            {t("conversion.clear")}
-          </button>
-        )}
+
+      {/* Right: Output dir + Convert */}
+      <div className="flex items-center gap-3">
+        {/* Output directory selector */}
+        <button
+          onClick={handleSelectDir}
+          className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+        >
+          <FolderOutput size={14} />
+          <span className="max-w-[180px] truncate">
+            {outputDir
+              ? outputDir.split(/[\\/]/).pop()
+              : t("settings.sameAsSource")}
+          </span>
+        </button>
+
         {isConverting ? (
           <button
             onClick={cancelConversion}
             disabled={!canCancel}
-            className="flex items-center gap-1.5 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-full bg-destructive px-5 py-2 text-[12px] font-medium text-white shadow-sm transition-all hover:bg-destructive/90 hover:shadow disabled:opacity-50"
           >
-            <Square size={16} />
+            <Square size={14} />
             {t("conversion.cancel")}
           </button>
         ) : (
           <button
             onClick={startConversion}
             disabled={!canStart}
-            className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#3b82f6] to-[#2563eb] px-5 py-2 text-[12px] font-medium text-white shadow-sm transition-all hover:from-[#2563eb] hover:to-[#1d4ed8] hover:shadow disabled:opacity-50"
           >
-            <Play size={16} />
+            <Play size={14} />
             {t("conversion.start")}
           </button>
         )}

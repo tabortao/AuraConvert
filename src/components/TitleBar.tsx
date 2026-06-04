@@ -1,22 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Minus, Square, X, Maximize2 } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
+import { useSettingsStore } from "../stores/settingsStore";
 
 export function TitleBar() {
   const [isMaximized, setIsMaximized] = useState(false);
-
-  useEffect(() => {
-    // Listen for window state changes
-    const checkMaximized = async () => {
-      try {
-        const maximized = await invoke<boolean>("is_window_maximized");
-        setIsMaximized(maximized);
-      } catch {
-        // command may not exist yet
-      }
-    };
-    checkMaximized();
-  }, []);
+  const theme = useSettingsStore((s) => s.theme);
 
   const handleMinimize = async () => {
     await invoke("minimize_window");
@@ -31,48 +21,62 @@ export function TitleBar() {
     await invoke("close_window");
   };
 
+  const isDark = theme === "dark";
+
   return (
     <div
       data-tauri-drag-region
-      className="flex h-9 shrink-0 items-center justify-between select-none"
+      className={`flex h-10 shrink-0 items-center justify-between select-none ${
+        isDark
+          ? "bg-[#1a1a1a]"
+          : "bg-gradient-to-r from-[#3b82f6] to-[#2563eb]"
+      }`}
       style={{ WebkitAppRegion: "drag" } as React.CSSProperties}
     >
-      {/* Left: App icon + title */}
-      <div className="flex items-center gap-2 px-4">
-        <div className="flex h-5 w-5 items-center justify-center rounded bg-primary/20">
-          <span className="text-xs">🎵</span>
+      {/* Left: App title */}
+      <div className="flex items-center gap-2.5 px-4">
+        <div className={`flex h-5 w-5 items-center justify-center rounded-md ${isDark ? "bg-white/10" : "bg-white/20"}`}>
+          <span className="text-[11px]">🎵</span>
         </div>
-        <span className="text-xs font-medium text-muted-foreground">
+        <span className={`text-[13px] font-medium ${isDark ? "text-white/70" : "text-white/90"}`}>
           AuraConvert
         </span>
+        <span className={`text-[11px] ${isDark ? "text-white/30" : "text-white/50"}`}>v1.0.0</span>
       </div>
 
-      {/* Right: Window controls */}
+      {/* Right: Theme toggle + Window controls */}
       <div
         className="flex items-center"
         style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
       >
+        <ThemeToggle light={isDark} />
         <button
           onClick={handleMinimize}
-          className="flex h-9 w-11 items-center justify-center text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          className={`flex h-10 w-[46px] items-center justify-center transition-colors ${
+            isDark ? "text-white/50 hover:bg-white/10 hover:text-white/80" : "text-white/70 hover:bg-white/10 hover:text-white"
+          }`}
           title="最小化"
         >
           <Minus size={14} strokeWidth={1.5} />
         </button>
         <button
           onClick={handleMaximize}
-          className="flex h-9 w-11 items-center justify-center text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          className={`flex h-10 w-[46px] items-center justify-center transition-colors ${
+            isDark ? "text-white/50 hover:bg-white/10 hover:text-white/80" : "text-white/70 hover:bg-white/10 hover:text-white"
+          }`}
           title={isMaximized ? "还原" : "最大化"}
         >
           {isMaximized ? (
-            <Maximize2 size={12} strokeWidth={1.5} />
+            <Maximize2 size={11} strokeWidth={1.5} />
           ) : (
-            <Square size={12} strokeWidth={1.5} />
+            <Square size={11} strokeWidth={1.5} />
           )}
         </button>
         <button
           onClick={handleClose}
-          className="flex h-9 w-11 items-center justify-center text-muted-foreground transition-colors hover:bg-destructive hover:text-destructive-foreground"
+          className={`flex h-10 w-[46px] items-center justify-center transition-colors ${
+            isDark ? "text-white/50 hover:bg-[#ef4444] hover:text-white" : "text-white/70 hover:bg-[#ef4444] hover:text-white"
+          }`}
           title="关闭"
         >
           <X size={14} strokeWidth={1.5} />

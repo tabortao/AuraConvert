@@ -2,7 +2,11 @@ import { Moon, Sun } from "lucide-react";
 import { useSettingsStore } from "../stores/settingsStore";
 import { useEffect } from "react";
 
-export function ThemeToggle() {
+interface ThemeToggleProps {
+  light?: boolean;
+}
+
+export function ThemeToggle({ light }: ThemeToggleProps) {
   const theme = useSettingsStore((s) => s.theme);
   const updateSetting = useSettingsStore((s) => s.updateSetting);
 
@@ -20,13 +24,17 @@ export function ThemeToggle() {
     updateSetting("theme", newTheme);
   };
 
+  const colorClass = light
+    ? "text-white/60 hover:text-white hover:bg-white/10"
+    : "text-muted-foreground hover:bg-secondary hover:text-foreground";
+
   return (
     <button
       onClick={toggle}
-      className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+      className={`flex h-10 w-10 items-center justify-center transition-colors ${colorClass}`}
       title={theme === "dark" ? "切换到浅色主题" : "切换到深色主题"}
     >
-      {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+      {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
     </button>
   );
 }

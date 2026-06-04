@@ -8,7 +8,6 @@ import { useTranslation } from "react-i18next";
 export function FileList() {
   const files = useConversionStore((s) => s.files);
   const isConverting = useConversionStore((s) => s.isConverting);
-  const clearFiles = useConversionStore((s) => s.clearFiles);
   const { t } = useTranslation();
   const [totalProgress, setTotalProgress] = useState({
     completed: 0,
@@ -29,36 +28,40 @@ export function FileList() {
 
   if (files.length === 0) {
     return (
-      <div className="flex h-full flex-col items-center justify-center text-muted-foreground">
-        <Music size={48} className="mb-3 opacity-30" />
-        <p className="text-sm">{t("fileList.empty")}</p>
-        <p className="mt-1 text-xs opacity-60">
-          {t("fileList.emptyHint")}
-        </p>
+      <div className="flex h-full flex-col items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+            <Music size={32} className="text-primary/60" />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-medium text-muted-foreground">
+              {t("fileList.empty")}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground/60">
+              {t("fileList.emptyHint")}
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full flex-col">
-      {/* Header */}
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">
-          {t("fileList.totalFiles", { count: files.length })}
-        </span>
-        {!isConverting && (
-          <button
-            onClick={clearFiles}
-            className="text-xs text-muted-foreground transition-colors hover:text-destructive"
-          >
-            {t("fileList.clearList")}
-          </button>
-        )}
+    <div className="flex h-full flex-col overflow-hidden">
+      {/* Table Header */}
+      <div className="flex shrink-0 items-center border-b border-border bg-card/50 px-4 py-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+        <div className="w-8 text-center">#</div>
+        <div className="flex-1 min-w-0">{t("fileList.fileName")}</div>
+        <div className="w-16 text-center">{t("fileList.format")}</div>
+        <div className="w-20 text-right">{t("fileList.size")}</div>
+        <div className="w-20 text-right">{t("fileList.duration")}</div>
+        <div className="w-24 text-center">{t("fileList.status")}</div>
+        <div className="w-16 text-center">{t("fileList.actions")}</div>
       </div>
 
       {/* Total Progress */}
       {isConverting && (
-        <div className="mb-3">
+        <div className="mx-4 mt-2">
           <TotalProgress
             completed={totalProgress.completed}
             total={totalProgress.total}
@@ -68,9 +71,9 @@ export function FileList() {
       )}
 
       {/* File List */}
-      <div className="flex-1 space-y-1 overflow-y-auto">
-        {files.map((file) => (
-          <FileItem key={file.id} file={file} />
+      <div className="flex-1 overflow-y-auto">
+        {files.map((file, index) => (
+          <FileItem key={file.id} file={file} index={index} />
         ))}
       </div>
     </div>

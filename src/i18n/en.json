@@ -33,7 +33,13 @@
     "totalFiles": "{{count}} files total",
     "clearList": "Clear list",
     "completed": "completed",
-    "pending": "pending"
+    "pending": "pending",
+    "fileName": "File Name",
+    "format": "Format",
+    "size": "Size",
+    "duration": "Duration",
+    "status": "Status",
+    "actions": "Actions"
   },
   "fileItem": {
     "compress": "Compressed {{percent}}%",

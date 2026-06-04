@@ -1,7 +1,6 @@
 import { useConversionStore } from "../stores/conversionStore";
 import { OUTPUT_FORMATS } from "../utils/formatUtils";
 import type { OutputFormat } from "../types";
-import { Music } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export function FormatSelector() {
@@ -15,10 +14,6 @@ export function FormatSelector() {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <Music size={14} className="text-muted-foreground" />
-        <span className="text-xs font-medium">{t("settings.outputFormat")}</span>
-      </div>
       <select
         value={format}
         onChange={(e) => handleChange(e.target.value as OutputFormat)}
