@@ -23,15 +23,27 @@ export function TitleBar() {
 
   const isDark = theme === "dark";
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
   return (
     <div
-      data-tauri-drag-region
+      data-tauri-drag-region="false"
       className={`flex h-10 shrink-0 items-center justify-between select-none ${
         isDark
           ? "bg-[#1a1a1a]"
           : "bg-gradient-to-r from-[#3b82f6] to-[#2563eb]"
       }`}
       style={{ WebkitAppRegion: "drag" } as React.CSSProperties}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
     >
       {/* Left: App title */}
       <div className="flex items-center gap-2.5 px-4">

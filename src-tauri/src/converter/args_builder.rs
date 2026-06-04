@@ -20,8 +20,37 @@ pub fn build_ffmpeg_args(
     format_config: &FormatConfig,
     is_video: bool,
 ) -> Vec<String> {
+    let simple_formats = ["ac3", "eac3", "opus", "mp2"];
+    let is_simple_format = simple_formats.contains(&format_config.extension);
+    
+    let mut args: Vec<String> = vec![];
+    
+    // For simple formats with strict encoders, use minimal command
+    if is_simple_format {
+        args.push("-y".to_string());
+        args.push("-i".to_string());
+        args.push(input_path.to_string());
+        args.push("-c:a".to_string());
+        args.push(format_config.codec.to_string());
+        
+        if let Some(bitrate) = params.bitrate {
+            if !format_config.lossless {
+                args.push("-b:a".to_string());
+                args.push(format!("{}k", bitrate));
+            }
+        }
+        
+        for extra in &format_config.extra_args {
+            args.push(extra.to_string());
+        }
+        
+        args.push(output_path.to_string());
+        
+        return args;
+    }
+    
+    // For other formats, use full command
     let mut args: Vec<String> = vec![
-        "-hide_banner".to_string(),
         "-y".to_string(), // Overwrite output
         "-i".to_string(),
         input_path.to_string(),
@@ -36,13 +65,21 @@ pub fn build_ffmpeg_args(
     if !is_video {
         args.push("-map".to_string());
         args.push("0:a".to_string());
-        args.push("-map".to_string());
-        args.push("0:v?".to_string());
+        // Only add video mapping for formats that support cover art
+        if format_config.extension == "mp3" || format_config.extension == "m4a" || 
+           format_config.extension == "flac" || format_config.extension == "ogg" {
+            args.push("-map".to_string());
+            args.push("0:v?".to_string());
+            args.push("-c:v".to_string());
+            args.push("copy".to_string());
+            args.push("-disposition:v".to_string());
+            args.push("attached_pic".to_string());
+        }
     }
 
     // Build audio filter chain
     let mut filters: Vec<String> = vec![];
-
+    
     // Volume adjustment (10%-400%)
     if let Some(vol) = params.volume {
         if vol != 100 {
@@ -118,25 +155,19 @@ pub fn build_ffmpeg_args(
     }
 
     // Preserve metadata (title, artist, album, cover art, etc.)
-    // -map_metadata 0 copies all global metadata from input to output
     args.push("-map_metadata".to_string());
     args.push("0".to_string());
-
-    // Copy cover art video stream as-is (for audio files with embedded artwork)
-    if !is_video {
-        args.push("-c:v".to_string());
-        args.push("copy".to_string());
-    }
 
     // Format-specific extra args
     for extra in &format_config.extra_args {
         args.push(extra.to_string());
     }
 
-    // Progress output to stdout
-    args.push("-progress".to_string());
-    args.push("pipe:1".to_string());
-    args.push("-nostats".to_string());
+    // Format flag (-f) if specified
+    if let Some(fmt) = format_config.format_flag {
+        args.push("-f".to_string());
+        args.push(fmt.to_string());
+    }
 
     // Output file
     args.push(output_path.to_string());
@@ -260,8 +291,10 @@ mod tests {
         };
         let args = build_ffmpeg_args("input.wav", "output.mp3", &params, &config, false);
 
-        assert!(args.contains(&"-progress".to_string()));
-        assert!(args.contains(&"pipe:1".to_string()));
-        assert!(args.contains(&"-nostats".to_string()));
+        // Check basic command structure
+        assert!(args.contains(&"-y".to_string()));
+        assert!(args.contains(&"-i".to_string()));
+        assert!(args.contains(&"input.wav".to_string()));
+        assert!(args.contains(&"output.mp3".to_string()));
     }
 }

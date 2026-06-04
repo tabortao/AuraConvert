@@ -8,7 +8,7 @@
 
 <p align="center">
   <strong>音擎</strong> — 一款基于 Rust + Tauri 构建的轻量级专业音频转换器<br>
-  支持 21 种输出格式 · 批量转换 · 实时进度 · 视频音频提取 · 国际化
+  支持 13 种输出格式 · 批量转换 · 实时进度 · 视频音频提取 · 国际化
 </p>
 
 ---
@@ -16,7 +16,7 @@
 ## ✨ 功能特性
 
 ### 核心转换
-- **21 种输出格式**：MP3、AAC、FLAC、WAV、M4A、OGG、Opus、ALAC、WMA、AC3、AIFF、E-AC3、DTS、MP2、WavPack、TTA、aptX、SBC、TrueHD、MLP、DFPWM
+- **13 种输出格式**：MP3、AAC、FLAC、WAV、M4A、OGG、Opus、ALAC、AC3、AIFF、E-AC3、MP2、WavPack
 - **批量转换**：支持拖拽多个文件/文件夹同时转换
 - **视频音频提取**：支持从 MP4、MKV、AVI、MOV、WMV、FLV、WebM 等视频文件中提取音频
 - **专辑封面保留**：自动保留音频文件的封面图片
@@ -74,7 +74,7 @@ AuraConvert/
 │   │   ├── FileList.tsx            # 文件列表 + 总进度条
 │   │   ├── FileItem.tsx           # 单个文件行（状态/进度/压缩比）
 │   │   ├── SettingsPanel.tsx       # 设置面板（FFmpeg/格式/参数/输出）
-│   │   ├── FormatSelector.tsx      # 输出格式选择器（21种格式）
+│   │   ├── FormatSelector.tsx      # 输出格式选择器（13 种格式）
 │   │   ├── ParamPanel.tsx          # 参数调节面板
 │   │   ├── ProgressBar.tsx         # 进度条组件
 │   │   ├── ConvertButton.tsx       # 开始/取消/清空按钮
@@ -106,7 +106,7 @@ AuraConvert/
 │   │   │   ├── audio_info.rs       # read_audio_info（lofty + ffprobe）
 │   │   │   └── file_ops.rs        # select_files / select_output_dir
 │   │   ├── converter/             # 转换逻辑
-│   │   │   ├── format_config.rs   # 21 种格式配置（编码器/扩展名/参数）
+│   │   │   ├── format_config.rs   # 13 种格式配置（编码器/扩展名/参数）
 │   │   │   ├── args_builder.rs    # FFmpeg 命令行参数构建器
 │   │   │   └── smart_optimize.rs  # 智能参数优化
 │   │   ├── ffmpeg/                # FFmpeg 集成
@@ -225,7 +225,7 @@ cargo test
 ```
 
 包含以下测试：
-- `format_config` — 21 种格式配置完整性验证
+- `format_config` — 13 种格式配置完整性验证
 - `args_builder` — FFmpeg 参数构建（MP3/音量/速度/视频提取/无损/进度输出）
 - `smart_optimize` — 智能参数优化（无损保留/有损限制/声道限制）
 - `parser` — 进度行解析 + 进度百分比计算

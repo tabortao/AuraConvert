@@ -38,6 +38,7 @@ pnpm-debug.log*
 
 # Test files
 docs/test.*
+docs/Reference/doc-ffmpeg-8.1.1-essentials_build/*
 *.mp3
 *.wav
 *.flac

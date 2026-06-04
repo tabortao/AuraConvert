@@ -7,19 +7,11 @@ export type OutputFormat =
   | "ogg"
   | "opus"
   | "alac"
-  | "wma"
   | "ac3"
   | "aiff"
   | "eac3"
-  | "dts"
   | "mp2"
-  | "wavpack"
-  | "tta"
-  | "aptx"
-  | "sbc"
-  | "truehd"
-  | "mlp"
-  | "dfpwm";
+  | "wavpack";
 
 export type BitrateOption = "auto" | 320 | 256 | 224 | 192 | 128 | 96 | 64 | 32 | "copy";
 export type SampleRateOption = "auto" | 48000 | 44100 | 32000 | 24000 | 22050 | 16000 | 12000 | 11025 | 8000;

@@ -1,4 +1,4 @@
-/// Format configuration for all 21 supported output formats
+/// Format configuration for all supported output formats (FFmpeg 8.1.1 essentials build compatible)
 #[allow(dead_code)]
 pub struct FormatConfig {
     pub codec: &'static str,
@@ -10,6 +10,7 @@ pub struct FormatConfig {
     pub max_sample_rate: Option<u32>,
     pub supports_bit_depth: bool,
     pub extra_args: Vec<&'static str>,
+    pub format_flag: Option<&'static str>,
 }
 
 /// Get format configuration for a given format string
@@ -25,6 +26,7 @@ pub fn get_format_config(format: &str) -> FormatConfig {
             max_sample_rate: Some(48000),
             supports_bit_depth: false,
             extra_args: vec![],
+            format_flag: None,
         },
         "aac" => FormatConfig {
             codec: "aac",
@@ -36,6 +38,7 @@ pub fn get_format_config(format: &str) -> FormatConfig {
             max_sample_rate: Some(96000),
             supports_bit_depth: false,
             extra_args: vec![],
+            format_flag: None,
         },
         "flac" => FormatConfig {
             codec: "flac",
@@ -47,6 +50,7 @@ pub fn get_format_config(format: &str) -> FormatConfig {
             max_sample_rate: Some(192000),
             supports_bit_depth: true,
             extra_args: vec![],
+            format_flag: None,
         },
         "wav" => FormatConfig {
             codec: "pcm_s16le",
@@ -58,6 +62,7 @@ pub fn get_format_config(format: &str) -> FormatConfig {
             max_sample_rate: Some(192000),
             supports_bit_depth: true,
             extra_args: vec![],
+            format_flag: None,
         },
         "m4a" => FormatConfig {
             codec: "aac",
@@ -69,6 +74,7 @@ pub fn get_format_config(format: &str) -> FormatConfig {
             max_sample_rate: Some(96000),
             supports_bit_depth: false,
             extra_args: vec![],
+            format_flag: Some("ipod"),
         },
         "ogg" => FormatConfig {
             codec: "libvorbis",
@@ -80,9 +86,10 @@ pub fn get_format_config(format: &str) -> FormatConfig {
             max_sample_rate: Some(48000),
             supports_bit_depth: false,
             extra_args: vec![],
+            format_flag: None,
         },
         "opus" => FormatConfig {
-            codec: "libopus",
+            codec: "opus",
             extension: "opus",
             lossless: false,
             default_bitrate: Some(128),
@@ -91,6 +98,7 @@ pub fn get_format_config(format: &str) -> FormatConfig {
             max_sample_rate: Some(48000),
             supports_bit_depth: false,
             extra_args: vec![],
+            format_flag: None,
         },
         "alac" => FormatConfig {
             codec: "alac",
@@ -102,17 +110,7 @@ pub fn get_format_config(format: &str) -> FormatConfig {
             max_sample_rate: Some(192000),
             supports_bit_depth: true,
             extra_args: vec![],
-        },
-        "wma" => FormatConfig {
-            codec: "wmav2",
-            extension: "wma",
-            lossless: false,
-            default_bitrate: Some(192),
-            max_bitrate: Some(320),
-            default_sample_rate: Some(44100),
-            max_sample_rate: Some(48000),
-            supports_bit_depth: false,
-            extra_args: vec![],
+            format_flag: Some("ipod"),
         },
         "ac3" => FormatConfig {
             codec: "ac3",
@@ -124,6 +122,7 @@ pub fn get_format_config(format: &str) -> FormatConfig {
             max_sample_rate: Some(48000),
             supports_bit_depth: false,
             extra_args: vec![],
+            format_flag: None,
         },
         "aiff" => FormatConfig {
             codec: "pcm_s16be",
@@ -135,6 +134,7 @@ pub fn get_format_config(format: &str) -> FormatConfig {
             max_sample_rate: Some(192000),
             supports_bit_depth: true,
             extra_args: vec![],
+            format_flag: None,
         },
         "eac3" => FormatConfig {
             codec: "eac3",
@@ -146,28 +146,19 @@ pub fn get_format_config(format: &str) -> FormatConfig {
             max_sample_rate: Some(48000),
             supports_bit_depth: false,
             extra_args: vec![],
-        },
-        "dts" => FormatConfig {
-            codec: "dca",
-            extension: "dts",
-            lossless: false,
-            default_bitrate: Some(1536),
-            max_bitrate: Some(1536),
-            default_sample_rate: Some(48000),
-            max_sample_rate: Some(48000),
-            supports_bit_depth: false,
-            extra_args: vec![],
+            format_flag: None,
         },
         "mp2" => FormatConfig {
             codec: "mp2",
             extension: "mp2",
             lossless: false,
-            default_bitrate: Some(320),
+            default_bitrate: Some(256),
             max_bitrate: Some(384),
-            default_sample_rate: Some(48000),
+            default_sample_rate: Some(44100),
             max_sample_rate: Some(48000),
             supports_bit_depth: false,
             extra_args: vec![],
+            format_flag: None,
         },
         "wavpack" => FormatConfig {
             codec: "wavpack",
@@ -179,72 +170,7 @@ pub fn get_format_config(format: &str) -> FormatConfig {
             max_sample_rate: Some(192000),
             supports_bit_depth: true,
             extra_args: vec![],
-        },
-        "tta" => FormatConfig {
-            codec: "tta",
-            extension: "tta",
-            lossless: true,
-            default_bitrate: None,
-            max_bitrate: None,
-            default_sample_rate: Some(48000),
-            max_sample_rate: Some(96000),
-            supports_bit_depth: true,
-            extra_args: vec![],
-        },
-        "aptx" => FormatConfig {
-            codec: "libaptx",
-            extension: "aptx",
-            lossless: false,
-            default_bitrate: Some(352),
-            max_bitrate: Some(352),
-            default_sample_rate: Some(44100),
-            max_sample_rate: Some(48000),
-            supports_bit_depth: false,
-            extra_args: vec![],
-        },
-        "sbc" => FormatConfig {
-            codec: "sbc",
-            extension: "sbc",
-            lossless: false,
-            default_bitrate: Some(328),
-            max_bitrate: Some(328),
-            default_sample_rate: Some(44100),
-            max_sample_rate: Some(48000),
-            supports_bit_depth: false,
-            extra_args: vec![],
-        },
-        "truehd" => FormatConfig {
-            codec: "truehd",
-            extension: "truehd",
-            lossless: true,
-            default_bitrate: None,
-            max_bitrate: None,
-            default_sample_rate: Some(48000),
-            max_sample_rate: Some(192000),
-            supports_bit_depth: true,
-            extra_args: vec![],
-        },
-        "mlp" => FormatConfig {
-            codec: "mlp",
-            extension: "mlp",
-            lossless: true,
-            default_bitrate: None,
-            max_bitrate: None,
-            default_sample_rate: Some(48000),
-            max_sample_rate: Some(192000),
-            supports_bit_depth: true,
-            extra_args: vec![],
-        },
-        "dfpwm" => FormatConfig {
-            codec: "dfpwm",
-            extension: "dfpwm",
-            lossless: false,
-            default_bitrate: None,
-            max_bitrate: None,
-            default_sample_rate: Some(48000),
-            max_sample_rate: Some(48000),
-            supports_bit_depth: false,
-            extra_args: vec![],
+            format_flag: None,
         },
         _ => FormatConfig {
             codec: "libmp3lame",
@@ -256,6 +182,7 @@ pub fn get_format_config(format: &str) -> FormatConfig {
             max_sample_rate: Some(48000),
             supports_bit_depth: false,
             extra_args: vec![],
+            format_flag: None,
         },
     }
 }
@@ -268,8 +195,7 @@ mod tests {
     fn test_all_formats_have_config() {
         let formats = [
             "mp3", "aac", "flac", "wav", "m4a", "ogg", "opus", "alac",
-            "wma", "ac3", "aiff", "eac3", "dts", "mp2", "wavpack", "tta",
-            "aptx", "sbc", "truehd", "mlp", "dfpwm",
+            "ac3", "aiff", "eac3", "mp2", "wavpack",
         ];
         for fmt in formats {
             let config = get_format_config(fmt);

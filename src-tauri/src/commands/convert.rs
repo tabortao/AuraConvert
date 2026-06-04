@@ -160,6 +160,9 @@ pub async fn start_conversion(
                 || file.extension == "webm",
         );
 
+        // Log args for debugging
+        log::info!("Converting {} -> {} | FFmpeg path: {} | Args: {:?}", input_path, output_path, ffmpeg_path.to_string_lossy(), args);
+
         // Create runner and run
         let runner = FfmpegRunner::new(ffmpeg_path.to_string_lossy().to_string());
         state

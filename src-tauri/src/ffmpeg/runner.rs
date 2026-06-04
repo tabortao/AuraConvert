@@ -3,21 +3,14 @@ use std::sync::Arc;
 use tauri::{AppHandle, Emitter};
 use tokio::io::AsyncBufReadExt;
 use tokio::process::Command;
+use tokio::time::{sleep, Duration};
 
 use super::parser;
 
+#[derive(Clone)]
 pub struct FfmpegRunner {
     ffmpeg_path: String,
     cancel_flag: Arc<AtomicBool>,
-}
-
-impl Clone for FfmpegRunner {
-    fn clone(&self) -> Self {
-        Self {
-            ffmpeg_path: self.ffmpeg_path.clone(),
-            cancel_flag: Arc::clone(&self.cancel_flag),
-        }
-    }
 }
 
 impl FfmpegRunner {
@@ -40,6 +33,10 @@ impl FfmpegRunner {
         total_duration_us: u64,
     ) -> Result<(), String> {
         self.cancel_flag.store(false, Ordering::SeqCst);
+
+        // Log the actual command being executed for debugging
+        let cmd_str = format!("{} {}", self.ffmpeg_path, args.join(" "));
+        log::info!("FFmpeg command: {}", cmd_str);
 
         let mut cmd = Command::new(&self.ffmpeg_path);
         cmd.args(&args)
@@ -65,12 +62,15 @@ impl FfmpegRunner {
             while let Ok(Some(line)) = lines.next_line().await {
                 output.push_str(&line);
                 output.push('\n');
+                // Small delay to prevent CPU spinning
+                sleep(Duration::from_millis(1)).await;
             }
             output
         });
 
         let reader = tokio::io::BufReader::new(stdout);
         let mut lines = reader.lines();
+        let mut last_progress = 0.0;
 
         while let Ok(Some(line)) = lines.next_line().await {
             if self.cancel_flag.load(Ordering::SeqCst) {
@@ -85,29 +85,41 @@ impl FfmpegRunner {
                 }
                 if let Some(time_us) = info.out_time_us {
                     let progress = parser::calculate_progress(time_us, total_duration_us);
-                    let _ = app.emit(
-                        "conversion-progress",
-                        serde_json::json!({
-                            "fileId": file_id,
-                            "progress": progress,
-                            "speed": info.speed,
-                        }),
-                    );
+                    if progress > last_progress {
+                        last_progress = progress;
+                        let _ = app.emit(
+                            "conversion-progress",
+                            serde_json::json!({
+                                "fileId": file_id,
+                                "progress": progress,
+                                "speed": info.speed,
+                            }),
+                        );
+                    }
                 }
             }
         }
 
-        // Wait for process to complete
-        let status = child.wait().await.map_err(|e| e.to_string())?;
+        // Wait for process to complete with timeout
+        let status = tokio::select! {
+            result = child.wait() => result.map_err(|e| e.to_string())?,
+            _ = sleep(Duration::from_secs(300)) => {
+                let _ = child.kill().await;
+                let _ = stderr_handle.await;
+                return Err("Conversion timeout".to_string());
+            }
+        };
+
         let stderr_output = stderr_handle.await.map_err(|e| e.to_string())?;
 
         if !status.success() {
             let error_lines: Vec<&str> = stderr_output.lines().collect();
             let meaningful_error = error_lines
                 .iter()
-                .find(|l| l.contains("Error") || l.contains("error"))
+                .find(|l| l.contains("Error") || l.contains("error") || l.contains("Error while") || l.contains("Invalid argument"))
                 .map(|l| l.to_string())
                 .unwrap_or_else(|| stderr_output.trim().to_string());
+            
             return Err(meaningful_error);
         }
 

@@ -24,6 +24,7 @@ pub fn run() {
             commands::convert::cancel_conversion,
             commands::audio_info::read_audio_info,
             commands::file_ops::select_files,
+            commands::file_ops::select_folder,
             commands::file_ops::select_output_dir,
             commands::file_ops::select_ffmpeg_exe,
             commands::file_ops::get_file_metadata,
@@ -32,6 +33,9 @@ pub fn run() {
             commands::window::close_window,
         ])
         .setup(|app| {
+            // Initialize logger for debugging
+            let _ = env_logger::try_init();
+
             // Initialize default settings
             if let Ok(store) = app.store("settings.json") {
                 if store.get("ffmpeg_path").is_none() {

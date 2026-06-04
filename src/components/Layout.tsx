@@ -1,3 +1,4 @@
+import { useState, useEffect, useCallback } from "react";
 import { TitleBar } from "./TitleBar";
 import { SettingsPanel } from "./SettingsPanel";
 import { DropZone } from "./DropZone";
@@ -9,12 +10,15 @@ import { useConversionStore } from "../stores/conversionStore";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { useMemo } from "react";
 import { Github } from "lucide-react";
+import { Upload } from "lucide-react";
 
 export function Layout() {
   const { status } = useFFmpeg();
   const { startConversion, cancelConversion } = useConversion();
   const isConverting = useConversionStore((s) => s.isConverting);
   const clearFiles = useConversionStore((s) => s.clearFiles);
+  const addFiles = useConversionStore((s) => s.addFiles);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const shortcuts = useMemo(
     () => [
@@ -39,13 +43,65 @@ export function Layout() {
   );
   useKeyboardShortcuts(shortcuts);
 
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      const newFiles = files.map((f) => {
+        const name = f.name;
+        const extension = name.split(".").pop()?.toLowerCase() || "";
+        return {
+          id: crypto.randomUUID(),
+          path: (f as any).path || name,
+          name,
+          extension,
+          size: f.size,
+          isVideo: ["mp4", "mkv", "avi", "mov", "wmv", "flv", "webm"].includes(extension),
+          status: "pending" as const,
+          progress: 0,
+        };
+      });
+      addFiles(newFiles);
+    }
+  }, [addFiles]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  }, []);
+
   return (
-    <div className="flex h-screen flex-col bg-background text-foreground overflow-hidden">
+    <div 
+      className="flex h-screen flex-col bg-background text-foreground overflow-hidden"
+      onDrop={handleDrop}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDragEnter={handleDragEnter}
+    >
       {/* Custom Title Bar - purple gradient */}
       <TitleBar />
 
       {/* Toolbar */}
-      <div className="flex h-11 shrink-0 items-center gap-3 border-b border-border bg-card px-4">
+      <div 
+        className="flex h-11 shrink-0 items-center gap-3 border-b border-border bg-card px-4"
+        data-tauri-drag-region="false"
+      >
         <DropZone />
         <div className="flex-1" />
         {/* FFmpeg Status */}
@@ -76,7 +132,12 @@ export function Layout() {
       </div>
 
       {/* Main Content */}
-      <main className="flex flex-1 overflow-hidden">
+      <main
+        className={`relative flex flex-1 overflow-hidden transition-all duration-200 ${
+          isDragOver ? "bg-primary/5" : ""
+        }`}
+        data-tauri-drag-region="false"
+      >
         {/* Center: File List */}
         <div className="flex flex-1 flex-col overflow-hidden">
           <FileList />
@@ -86,10 +147,29 @@ export function Layout() {
         <aside className="w-[280px] shrink-0 overflow-y-auto border-l border-border bg-sidebar">
           <SettingsPanel />
         </aside>
+
+        {/* Drag overlay */}
+        {isDragOver && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-primary/10 backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-4 rounded-2xl border-2 border-dashed border-primary bg-background/80 p-12 shadow-2xl">
+              <Upload size={64} className="text-primary animate-bounce" />
+              <p className="text-2xl font-bold text-primary">释放文件以添加</p>
+              <p className="text-sm text-muted-foreground">
+                支持音频文件：MP3、WAV、FLAC、AAC、OGG 等
+              </p>
+              <p className="text-sm text-muted-foreground">
+                支持视频文件：MP4、MKV、AVI、MOV 等
+              </p>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Bottom Status Bar */}
-      <div className="flex h-12 shrink-0 items-center justify-between border-t border-border bg-card px-4">
+      <div 
+        className="flex h-12 shrink-0 items-center justify-between border-t border-border bg-card px-4"
+        data-tauri-drag-region="false"
+      >
         <ConvertButton />
       </div>
     </div>
