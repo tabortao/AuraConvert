@@ -35,9 +35,12 @@ export function TitleBar() {
     >
       {/* Left: App title */}
       <div className="flex items-center gap-2.5 px-4">
-        <div className={`flex h-5 w-5 items-center justify-center rounded-md ${isDark ? "bg-white/10" : "bg-white/20"}`}>
-          <span className="text-[11px]">🎵</span>
-        </div>
+        <img
+          src="/icon.png"
+          alt="AuraConvert"
+          className="h-5 w-5 rounded-sm"
+          draggable={false}
+        />
         <span className={`text-[13px] font-medium ${isDark ? "text-white/70" : "text-white/90"}`}>
           AuraConvert
         </span>
