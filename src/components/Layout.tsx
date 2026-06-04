@@ -10,8 +10,8 @@ import { useConversion } from "../hooks/useConversion";
 import { useConversionStore } from "../stores/conversionStore";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { useMemo } from "react";
-import { Github } from "lucide-react";
-import { Upload } from "lucide-react";
+import { Github, Upload } from "lucide-react";
+import { ToastContainer } from "./Toast";
 
 const SUPPORTED_EXTENSIONS = [
   "mp3", "aac", "flac", "wav", "m4a", "ogg", "opus", "alac",
@@ -27,7 +27,6 @@ export function Layout() {
   const { startConversion, cancelConversion } = useConversion();
   const isConverting = useConversionStore((s) => s.isConverting);
   const clearFiles = useConversionStore((s) => s.clearFiles);
-  const addFiles = useConversionStore((s) => s.addFiles);
   const [isDragOver, setIsDragOver] = useState(false);
 
   // Tauri v2 native drag-drop handler
@@ -48,11 +47,16 @@ export function Layout() {
             setIsDragOver(false);
             
             if (paths.length > 0) {
+              // Use getState to avoid stale closure / re-registration issues
+              const { addFiles, files } = useConversionStore.getState();
+              const existingPaths = new Set(files.map((f) => f.path));
+              
               const newFiles = paths
                 .filter((p) => {
                   const ext = p.split(".").pop()?.toLowerCase() || "";
                   return SUPPORTED_EXTENSIONS.includes(ext);
                 })
+                .filter((p) => !existingPaths.has(p)) // deduplicate
                 .map((p) => {
                   const name = p.split(/[\\/]/).pop() || p;
                   const extension = name.split(".").pop()?.toLowerCase() || "";
@@ -84,7 +88,7 @@ export function Layout() {
     return () => {
       if (unlisten) unlisten();
     };
-  }, [addFiles]);
+  }, []);
 
   const shortcuts = useMemo(
     () => [
@@ -183,6 +187,9 @@ export function Layout() {
           </div>
         )}
       </main>
+
+      {/* Toast notifications - above status bar */}
+      <ToastContainer />
 
       {/* Bottom Status Bar */}
       <div 

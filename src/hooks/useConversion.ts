@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useConversionStore } from "../stores/conversionStore";
+import { useToastStore } from "../stores/toastStore";
 import type { ConversionProgress, TotalProgress } from "../types";
 
 export function useConversion() {
@@ -58,6 +59,7 @@ export function useConversion() {
 
     store.setIsConverting(true);
     store.setCanCancel(true);
+    const startTime = Date.now();
 
     try {
       await invoke("start_conversion", {
@@ -90,6 +92,30 @@ export function useConversion() {
     } finally {
       store.setIsConverting(false);
       store.setCanCancel(false);
+
+      // Show summary toast
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      const latest = useConversionStore.getState();
+      const completed = latest.files.filter((f) => f.status === "completed").length;
+      const failed = latest.files.filter((f) => f.status === "failed").length;
+      const total = pendingFiles.length;
+
+      if (completed > 0 && failed === 0) {
+        useToastStore.getState().addToast({
+          message: `全部完成 (${completed} 个文件, 耗时 ${elapsed}s)`,
+          type: "success",
+        });
+      } else if (completed > 0 && failed > 0) {
+        useToastStore.getState().addToast({
+          message: `完成 ${completed}/${total} (${failed} 个失败, 耗时 ${elapsed}s)`,
+          type: "error",
+        });
+      } else if (failed > 0) {
+        useToastStore.getState().addToast({
+          message: `全部失败 (${failed} 个文件, 耗时 ${elapsed}s)`,
+          type: "error",
+        });
+      }
     }
   };
 

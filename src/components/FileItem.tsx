@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useAudioInfo } from "../hooks/useAudioInfo";
+import { useConversionStore } from "../stores/conversionStore";
 import { formatFileSize, formatDuration } from "../utils/fileUtils";
+import { open } from "@tauri-apps/plugin-shell";
 import {
   CheckCircle,
   XCircle,
@@ -12,6 +14,8 @@ import {
   Disc,
   Mic2,
   Tag,
+  Trash2,
+  FolderOpen,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -24,12 +28,30 @@ export function FileItem({ file, index }: FileItemProps) {
   const { t } = useTranslation();
   const [showInfo, setShowInfo] = useState(false);
   const { info, loading, fetchInfo } = useAudioInfo();
+  const removeFile = useConversionStore((s) => s.removeFile);
+  const isConverting = useConversionStore((s) => s.isConverting);
 
   const handleShowInfo = async () => {
     if (!info && !loading) {
       await fetchInfo(file.path);
     }
     setShowInfo(!showInfo);
+  };
+
+  const handleDelete = () => {
+    removeFile(file.id);
+  };
+
+  const handleOpenFolder = async () => {
+    try {
+      // Get the parent directory
+      const path = file.outputPath || file.path;
+      const lastSep = Math.max(path.lastIndexOf("\\"), path.lastIndexOf("/"));
+      const folderPath = lastSep > 0 ? path.substring(0, lastSep) : path;
+      await open(folderPath);
+    } catch (e) {
+      console.error("Failed to open folder:", e);
+    }
   };
 
   const statusIcon = () => {
@@ -105,12 +127,33 @@ export function FileItem({ file, index }: FileItemProps) {
             {statusText()}
           </span>
         </div>
-        <div className="w-16 text-center">
+        <div className="flex items-center gap-0.5">
+          {/* Open folder - for completed files */}
+          {file.status === "completed" && (
+            <button
+              onClick={handleOpenFolder}
+              className="inline-flex items-center justify-center rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              title="打开文件夹"
+            >
+              <FolderOpen size={13} />
+            </button>
+          )}
+          {/* Delete - only when not converting */}
+          {!isConverting && (
+            <button
+              onClick={handleDelete}
+              className="inline-flex items-center justify-center rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+              title="删除"
+            >
+              <Trash2 size={13} />
+            </button>
+          )}
+          {/* Info */}
           <button
             onClick={handleShowInfo}
-            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            className="inline-flex items-center justify-center rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           >
-            <Info size={12} />
+            <Info size={13} />
           </button>
         </div>
       </div>
