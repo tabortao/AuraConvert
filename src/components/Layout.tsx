@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { TitleBar } from "./TitleBar";
 import { SettingsPanel } from "./SettingsPanel";
 import { DropZone } from "./DropZone";
@@ -12,6 +13,15 @@ import { useMemo } from "react";
 import { Github } from "lucide-react";
 import { Upload } from "lucide-react";
 
+const SUPPORTED_EXTENSIONS = [
+  "mp3", "aac", "flac", "wav", "m4a", "ogg", "opus", "alac",
+  "ac3", "aiff", "eac3", "mp2", "wv", "ape", "amr",
+  "mid", "midi", "spx", "mp4", "mka", "mkv",
+  "avi", "mov", "wmv", "flv", "webm",
+];
+
+const VIDEO_EXTENSIONS = ["mp4", "mkv", "avi", "mov", "wmv", "flv", "webm"];
+
 export function Layout() {
   const { status } = useFFmpeg();
   const { startConversion, cancelConversion } = useConversion();
@@ -19,6 +29,62 @@ export function Layout() {
   const clearFiles = useConversionStore((s) => s.clearFiles);
   const addFiles = useConversionStore((s) => s.addFiles);
   const [isDragOver, setIsDragOver] = useState(false);
+
+  // Tauri v2 native drag-drop handler
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+
+    async function setupDragDrop() {
+      try {
+        const appWindow = getCurrentWindow();
+        unlisten = await appWindow.onDragDropEvent(async (event) => {
+          const { type, paths } = event.payload;
+          
+          if (type === "enter" || type === "over") {
+            setIsDragOver(true);
+          } else if (type === "leave") {
+            setIsDragOver(false);
+          } else if (type === "drop") {
+            setIsDragOver(false);
+            
+            if (paths.length > 0) {
+              const newFiles = paths
+                .filter((p) => {
+                  const ext = p.split(".").pop()?.toLowerCase() || "";
+                  return SUPPORTED_EXTENSIONS.includes(ext);
+                })
+                .map((p) => {
+                  const name = p.split(/[\\/]/).pop() || p;
+                  const extension = name.split(".").pop()?.toLowerCase() || "";
+                  return {
+                    id: crypto.randomUUID(),
+                    path: p,
+                    name,
+                    extension,
+                    size: 0,
+                    isVideo: VIDEO_EXTENSIONS.includes(extension),
+                    status: "pending" as const,
+                    progress: 0,
+                  };
+                });
+              
+              if (newFiles.length > 0) {
+                addFiles(newFiles);
+              }
+            }
+          }
+        });
+      } catch (e) {
+        console.error("Failed to setup drag-drop:", e);
+      }
+    }
+
+    setupDragDrop();
+
+    return () => {
+      if (unlisten) unlisten();
+    };
+  }, [addFiles]);
 
   const shortcuts = useMemo(
     () => [
@@ -43,56 +109,9 @@ export function Layout() {
   );
   useKeyboardShortcuts(shortcuts);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(false);
-    
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
-      const newFiles = files.map((f) => {
-        const name = f.name;
-        const extension = name.split(".").pop()?.toLowerCase() || "";
-        return {
-          id: crypto.randomUUID(),
-          path: (f as any).path || name,
-          name,
-          extension,
-          size: f.size,
-          isVideo: ["mp4", "mkv", "avi", "mov", "wmv", "flv", "webm"].includes(extension),
-          status: "pending" as const,
-          progress: 0,
-        };
-      });
-      addFiles(newFiles);
-    }
-  }, [addFiles]);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(false);
-  }, []);
-
-  const handleDragEnter = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(true);
-  }, []);
-
   return (
     <div 
       className="flex h-screen flex-col bg-background text-foreground overflow-hidden"
-      onDrop={handleDrop}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDragEnter={handleDragEnter}
     >
       {/* Custom Title Bar - purple gradient */}
       <TitleBar />

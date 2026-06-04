@@ -1,5 +1,15 @@
 # Change Log
 
+## [v1.1.1] - 2026-06-04
+
+### Fixed
+
+- **拖拽功能**: 使用 Tauri v2 原生 `onDragDropEvent` API 替代 HTML5 拖拽事件
+  - HTML5 原生拖拽在 Tauri v2 中不可用（webview 不会触发 DOM drag/drop 事件）
+  - 通过 `getCurrentWindow().onDragDropEvent()` 监听系统级拖放事件
+  - 添加文件扩展名过滤，仅接受支持的音频/视频格式
+  - 保留拖拽视觉反馈（overlay + 动画）
+
 ## [v1.1.0] - 2026-06-04
 
 ### Changed
