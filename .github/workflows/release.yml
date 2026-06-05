@@ -101,8 +101,9 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - name: Enable pnpm
-        run: corepack enable pnpm
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -288,8 +289,9 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - name: Enable pnpm
-        run: corepack enable pnpm
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
 
       - name: Install system dependencies
         run: |
@@ -374,8 +376,9 @@ jobs:
         with:
           targets: x86_64-apple-darwin
 
-      - name: Enable pnpm
-        run: corepack enable pnpm
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -439,8 +442,9 @@ jobs:
         with:
           targets: aarch64-apple-darwin
 
-      - name: Enable pnpm
-        run: corepack enable pnpm
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
