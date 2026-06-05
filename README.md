@@ -33,6 +33,13 @@ The app is designed around a few practical ideas:
 - Users should have full control over output parameters (bitrate, sample rate, channels, volume, speed).
 - The UI should be clean, dark, and distraction-free.
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/images/UI-Dark.webp" alt="AuraConvert Dark Theme" width="49%">
+  <img src="docs/images/UI-Light.webp" alt="AuraConvert Light Theme" width="49%">
+</p>
+
 ## Highlights
 
 ### Core Conversion

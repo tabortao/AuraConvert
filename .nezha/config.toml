@@ -3,7 +3,7 @@ default = "claude"
 default_permission_mode = "ask"
 prompt_prefix = ""
 claude_version = "2.1.159"
-codex_version = ""
+codex_version = "0.137.0"
 
 [git]
 commit_prompt = """
