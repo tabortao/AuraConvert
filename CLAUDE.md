@@ -4,341 +4,123 @@
 
 ## Project Overview
 
-AuraConvert is a cross-platform desktop audio converter built with Tauri v2, Rust, and React. It supports 21 output formats, batch conversion, real-time progress tracking, and audio extraction from video files.
+AuraConvert is a cross-platform desktop audio converter built with Tauri v2, Rust, and React. Supports 13 output formats, batch conversion, real-time progress tracking, and audio extraction from video files.
+
+## Rules
+
+- **版本号管理**: 同一天的所有更新合并到同一个版本号中记录，避免版本号过多。如需追加内容，更新已有版本的 entry。
+- **包管理**: 使用 pnpm，不使用 npm。
+- **变更记录**: 每次任务完成后，在 `docs/ChangeLog.md` 中更新，格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)。
+- **构建**: 从 `src-tauri` 子目录使用 `cargo build --release`，完整打包使用 `pnpm tauri build`。
+- **FFmpeg**: 使用 FFmpeg 8.1.1 essentials build，不支持 DTS/WMA/TTA/aptX/SBC/TrueHD/MLP/DFPWM 编码器。
+- **常见错误**: 常见错误、多次提问最终解决的错误，需要写入 `docs/COMMON_ERRORS.md` 中，避免重复错误再犯。
 
 ## Tech Stack
 
 | Layer | Technology | Version |
 |-------|------------|---------|
 | Desktop Framework | Tauri | v2 |
-| Backend Language | Rust | 2024 Edition |
-| Frontend Framework | React | v19 |
+| Backend | Rust | 2024 Edition |
+| Frontend | React | v19 |
 | Type System | TypeScript | ~5.7 |
 | Build Tool | Vite | v6 |
-| CSS Framework | Tailwind CSS | v4 |
-| UI Components | Radix UI + shadcn/ui (New York) |
-| State Management | Zustand | v5 |
+| CSS | Tailwind CSS | v4 |
+| UI | Radix UI + shadcn/ui (New York) |
+| State | Zustand | v5 |
 | i18n | react-i18next | v15 |
 | Audio Metadata | lofty | v0.21 |
 | Async Runtime | tokio | v1 (full) |
 
-## Project Structure
-
-```
-AuraConvert/
-├── src/                          # Frontend source (React + TypeScript)
-│   ├── components/               # React components
-│   │   ├── Layout.tsx            # Main layout (Header + Sidebar + Content)
-│   │   ├── DropZone.tsx          # Drag & drop upload zone
-│   │   ├── FileList.tsx           # File list + total progress bar
-│   │   ├── FileItem.tsx          # Single file row (status/progress/compression ratio)
-│   │   ├── SettingsPanel.tsx      # Settings panel (FFmpeg/format/params/output)
-│   │   ├── FormatSelector.tsx     # Output format selector (21 formats)
-│   │   ├── ParamPanel.tsx         # Parameter adjustment panel
-│   │   ├── ProgressBar.tsx        # Progress bar component
-│   │   ├── ConvertButton.tsx      # Start/Clear/Cancel buttons
-│   │   ├── AudioInfoDialog.tsx    # Audio info dialog (cover + metadata)
-│   │   └── ThemeToggle.tsx        # Dark/Light theme toggle
-│   ├── hooks/                    # Custom React hooks
-│   │   ├── useFFmpeg.ts           # FFmpeg detection + path management
-│   │   ├── useConversion.ts       # Conversion flow control + event listeners
-│   │   ├── useAudioInfo.ts        # Audio info reading
-│   │   └── useKeyboardShortcuts.ts # Keyboard shortcuts
-│   ├── stores/                   # Zustand state management
-│   │   ├── conversionStore.ts     # Conversion state (file list/progress/params)
-│   │   └── settingsStore.ts      # Settings persistence (tauri-plugin-store)
-│   ├── i18n/                     # Internationalization
-│   │   ├── index.ts               # i18next configuration
-│   │   ├── zh.json                # Chinese translations
-│   │   └── en.json                # English translations
-│   ├── types/                    # TypeScript type definitions
-│   │   └── index.ts               # AudioFile, ConvertParams, etc.
-│   ├── utils/                    # Utility functions
-│   │   ├── ffmpegArgs.ts          # FFmpeg argument utilities
-│   │   ├── fileUtils.ts           # File utilities
-│   │   └── formatUtils.ts         # Format utilities
-│   ├── styles/                   # Global styles
-│   │   └── globals.css            # Tailwind CSS imports + custom styles
-│   ├── App.tsx                   # Root component
-│   └── main.tsx                  # Entry point
-│
-├── src-tauri/                    # Rust backend
-│   ├── src/
-│   │   ├── commands/             # Tauri commands (IPC calls)
-│   │   │   ├── mod.rs             # Command module exports
-│   │   │   ├── ffmpeg.rs          # detect_ffmpeg / check_ffmpeg_version
-│   │   │   ├── convert.rs         # start_conversion / cancel_conversion
-│   │   │   ├── audio_info.rs       # read_audio_info (lofty + ffprobe)
-│   │   │   └── file_ops.rs        # select_files / select_output_dir
-│   │   ├── converter/            # Conversion logic
-│   │   │   ├── mod.rs
-│   │   │   ├── format_config.rs   # 21 format configs (codec/extension/params)
-│   │   │   ├── args_builder.rs    # FFmpeg command-line argument builder
-│   │   │   └── smart_optimize.rs  # Smart parameter optimization
-│   │   ├── ffmpeg/               # FFmpeg integration
-│   │   │   ├── mod.rs
-│   │   │   ├── detector.rs        # FFmpeg auto-detection (PATH/registry/common paths)
-│   │   │   ├── runner.rs          # FFmpeg process management (async/progress/cancel)
-│   │   │   └── parser.rs          # -progress output parser
-│   │   ├── models/               # Data models
-│   │   │   ├── mod.rs
-│   │   │   ├── audio_file.rs      # AudioFile struct
-│   │   │   ├── convert_params.rs  # ConvertParams struct
-│   │   │   └── convert_result.rs  # ConvertResult struct
-│   │   ├── utils/                # Utilities
-│   │   │   ├── mod.rs
-│   │   │   └── path_utils.rs      # Output path construction
-│   │   ├── lib.rs                # Tauri entry (plugin registration/command registration/setup)
-│   │   └── main.rs               # Windows subsystem entry
-│   ├── Cargo.toml                # Rust dependencies
-│   ├── tauri.conf.json           # Tauri configuration
-│   ├── capabilities/default.json  # Permission configuration
-│   └── icons/                    # Application icons
-│
-├── package.json                  # Node.js dependencies
-├── vite.config.ts                # Vite configuration
-├── tsconfig.json                 # TypeScript configuration
-└── index.html                    # HTML entry point
-```
-
 ## Development Commands
 
-### Prerequisites
-
-- Rust >= 1.70
-- Node.js >= 18
-- pnpm >= 8
-- FFmpeg >= 5.0
-- Windows: MSVC Build Tools (C++ desktop development)
-
-### Setup
-
 ```bash
-# Clone repository
-git clone <repo-url>
-cd AuraConvert
-
-# Install frontend dependencies
-pnpm install
-```
-
-### Development
-
-```bash
-# Start development server (frontend HMR + Rust backend)
-pnpm tauri dev
-```
-
-The app will be available at `http://localhost:1420`
-
-### Build
-
-```bash
-# Build for production (frontend + backend → installer)
-pnpm tauri build
-```
-
-Output artifacts are in `src-tauri/target/release/bundle/`
-
-### Testing
-
-```bash
-# Run Rust tests
-cd src-tauri
-cargo test
+pnpm install          # Install frontend dependencies
+pnpm tauri dev        # Start dev server (frontend + backend)
+pnpm tauri build      # Build for production
+cd src-tauri && cargo test  # Run Rust tests
 ```
 
 ## Architecture
 
-### Frontend-Backend Communication
-
 ```
-React Frontend                Rust Backend (Tauri v2)
-┌─────────────┐              ┌──────────────────────┐
-│  Components │              │   Commands (8 APIs)  │
-│  ↓          │   invoke     │   ↓                  │
-│  Zustand    │ ──────────> │   Converter          │
-│  Stores     │              │   (args_builder)     │
-│  ↓          │   listen     │   ↓                  │
-│  Hooks      │ <────────── │   FFmpeg Runner      │
-│             │   events     │   (process mgmt)     │
-└─────────────┘              └──────────────────────┘
-                                      │
-                                      ▼
-                               ┌──────────────┐
-                               │   FFmpeg CLI  │
-                               │  (external)   │
-                               └──────────────┘
+React Frontend              Rust Backend (Tauri v2)
+┌──────────┐   invoke       ┌──────────────────────┐
+│ Zustand  │ ─────────────> │ Commands (8 APIs)    │
+│ Stores   │   listen       │ → Converter          │
+│ Hooks    │ <───────────── │ → FFmpeg Runner      │
+└──────────┘   events       └──────────┬───────────┘
+                                       ▼
+                                ┌──────────────┐
+                                │   FFmpeg CLI   │
+                                └──────────────┘
 ```
 
-### Tauri Commands (IPC)
+### Tauri Commands
 
 | Command | Parameters | Return | Description |
 |---------|------------|--------|-------------|
 | `detect_ffmpeg` | — | `FfmpegStatus` | Auto-detect FFmpeg path and version |
-| `check_ffmpeg_version` | `path: String` | `String` | Check FFmpeg version at path |
 | `start_conversion` | `files, params` | `String` | Start batch conversion |
 | `cancel_conversion` | — | `()` | Cancel current conversion |
 | `read_audio_info` | `file_path: String` | `AudioInfo` | Read audio metadata |
 | `select_files` | — | `Vec<String>` | Open file picker dialog |
 | `select_output_dir` | — | `Option<String>` | Open directory picker dialog |
-| `select_ffmpeg_exe` | — | `Option<String>` | Open FFmpeg executable picker |
+| `get_file_metadata` | `path: String` | `{size: u64}` | Get file size |
 
-### Tauri Events (Backend → Frontend)
+### Tauri Events
 
 | Event | Data | Description |
 |-------|------|-------------|
 | `conversion-progress` | `{fileId, progress, speed}` | Single file conversion progress |
-| `file-status-changed` | `{fileId, status}` | File status change (converting/cancelled) |
 | `file-completed` | `{fileId, outputPath, outputSize, compressionRatio}` | File conversion completed |
 | `file-failed` | `{fileId, status, error}` | File conversion failed |
 | `total-progress` | `{completed, total, percentage, eta}` | Overall progress update |
 
-## Supported Formats (21 Output Formats)
+## Supported Formats (13 Output Formats)
 
-### Lossy Formats
-- **MP3** - codec: `libmp3lame`, max bitrate: 320kbps
-- **AAC** - codec: `aac`, max bitrate: 512kbps
-- **M4A** - codec: `aac`, max bitrate: 512kbps
-- **OGG** - codec: `libvorbis`, max bitrate: 500kbps
-- **Opus** - codec: `libopus`
-- **WMA** - codec: `wmav2`
-- **AC3** - codec: `ac3`
-- **E-AC3** - codec: `eac3`
-- **DTS** - codec: `dca`
-- **MP2** - codec: `mp2`
+### Lossy
+| Format | Codec | Max Bitrate | Notes |
+|--------|-------|-------------|-------|
+| MP3 | `libmp3lame` | 320kbps | |
+| AAC | `aac` | 512kbps | |
+| M4A | `aac` | 512kbps | needs `-f ipod` |
+| OGG | `libvorbis` | 500kbps | uses `-q:a` quality mode |
+| Opus | `opus` | 510kbps | needs `-strict -2` |
+| AC3 | `ac3` | 640kbps | simple format (no `-ar`/`-ac`) |
+| E-AC3 | `eac3` | 1024kbps | simple format |
+| MP2 | `mp2` | 384kbps | simple format |
 
-### Lossless Formats
-- **FLAC** - codec: `flac`, supports bit depth
-- **WAV** - codec: `pcm_s16le`, supports bit depth
-- **ALAC** - codec: `alac`
-- **AIFF** - codec: `pcm_s16be`
-- **WavPack** - codec: `wavpack`
-- **TTA** - codec: `tta`
-- **aptX** - codec: `aptx`
-- **SBC** - codec: `sbc`
-- **TrueHD** - codec: `truehd`
-- **MLP** - codec: `mlp`
-- **DFPWM** - codec: `dfpwm`
+### Lossless
+| Format | Codec | Supports Bit Depth |
+|--------|-------|--------------------|
+| FLAC | `flac` | Yes |
+| WAV | `pcm_s16le` | Yes |
+| ALAC | `alac` | No |
+| AIFF | `pcm_s16be` | No |
+| WavPack | `wavpack` | No |
 
-## Key Features
-
-### Conversion Parameters
-- **Bitrate**: Adjustable output bitrate (lossy formats)
-- **Sample Rate**: 44100/48000/96000/192000 Hz
-- **Channels**: Mono/Stereo
-- **Bit Depth**: 16/24/32 bit (lossless formats)
-- **Volume**: 10%-400% volume scaling
-- **Speed**: 0.25x-4.00x playback speed transformation
-
-### Smart Optimization (`smart_optimize.rs`)
-- Preserves lossless quality when converting between lossless formats
-- Limits bitrate for lossy formats to prevent quality degradation
-- Adjusts channels automatically based on source
-
-### FFmpeg Integration
-- **Auto-detection chain**: User config → System PATH → Windows Registry → Common install paths
-- **Manual configuration**: User can specify FFmpeg path
-- **Real-time progress**: Parses `-progress pipe:1` output for accurate progress
-- **Process management**: Async execution with cancellation support
-
-### UI Features
-- **Dark theme**: Spotify-style dark UI (`#0a0a0a` background + `#1db954` accent)
-- **Drag & drop**: Support for dragging multiple files/folders
-- **Real-time progress**: Per-file progress + total progress + ETA
-- **Compression ratio**: Displayed after conversion
-- **Audio metadata**: View title, artist, album, cover art
-- **Keyboard shortcuts**: `Ctrl+Enter` start conversion, `Delete` clear list
-- **i18n**: Chinese/English language switching
-
-## Configuration
-
-### Tauri Config (`tauri.conf.json`)
-- Window: 1100×720 (min 900×600)
-- Identifier: `com.auraconvert`
-- Bundle target: NSIS (Windows installer)
-
-### Default Settings (via tauri-plugin-store)
-```json
-{
-  "ffmpeg_path": "",
-  "default_format": "mp3",
-  "bitrate": 320,
-  "sample_rate": 48000,
-  "channels": 2,
-  "output_dir_mode": "same",
-  "language": "zh"
-}
-```
-
-## Code Style & Conventions
+## Code Style
 
 ### Frontend (TypeScript/React)
-- Use functional components with hooks
-- Zustand for state management (not Redux)
-- Tailwind CSS for styling with `cn()` utility for conditional classes
-- Radix UI primitives for accessible components
-- i18next for internationalization (`useTranslation` hook)
-- File naming: PascalCase for components, camelCase for utilities
+- Functional components with hooks, Zustand for state, Tailwind CSS for styling
+- `cn()` utility for conditional classes, `useTranslation` for i18n
+- PascalCase for components, camelCase for utilities
 
 ### Backend (Rust)
-- 2024 Edition
-- Serde for serialization (`#[derive(Serialize, Deserialize)]`)
-- Tokio for async runtime
-- Tauri commands use `#[tauri::command]` attribute
-- Error handling with `Result<T, String>`
-- Logging with `log` + `env_logger` crates
+- 2024 Edition, Serde, Tokio, `#[tauri::command]` attribute
+- `Result<T, String>` for error handling, `log` + `env_logger` for logging
+- snake_case for functions/variables, PascalCase for types/structs
 
-### Naming Conventions
-- Rust: `snake_case` for functions/variables, `PascalCase` for types/structs
-- TypeScript: `camelCase` for functions/variables, `PascalCase` for components/types
-- Files: `PascalCase.tsx` for components, `camelCase.ts` for utilities
-
-## Testing
-
-### Rust Tests
-Located in `src-tauri/src/` with `#[cfg(test)]` modules:
-- `format_config` - 21 format configuration completeness verification
-- `args_builder` - FFmpeg argument construction (MP3/volume/speed/video extraction/lossless/progress output)
-- `smart_optimize` - Smart parameter optimization (lossless preservation/lossy limits/channel limits)
-- `parser` - Progress line parsing + progress percentage calculation
-- `path_utils` - Output path construction (same dir/custom dir/suffix mode)
-
-## Dependencies
-
-### Key Frontend Dependencies
-- `@tauri-apps/api` - Tauri IPC communication
-- `@tauri-apps/plugin-dialog` - Native file/dialog APIs
-- `@tauri-apps/plugin-fs` - File system access
-- `@tauri-apps/plugin-store` - Local storage persistence
-- `zustand` - Lightweight state management
-- `react-dropzone` - File drag & drop
-- `react-i18next` - Internationalization
-- `clsx` + `tailwind-merge` - Conditional CSS classes
-- `lucide-react` - Icon library
-- `@radix-ui/*` - Accessible UI primitives
-
-### Key Backend Dependencies (Rust)
-- `tauri` - Desktop framework
-- `tauri-plugin-*` - Official Tauri plugins
-- `serde` + `serde_json` - Serialization
-- `tokio` - Async runtime
-- `lofty` - Audio metadata reading
-- `winreg` - Windows registry access
-- `regex` - Regular expressions
-- `log` + `env_logger` - Logging
-- `uuid` - UUID generation
-- `chrono` - Date/time handling
-- `base64` - Base64 encoding
-
-## Design Specifications
+## Design
 
 - **Primary Color**: `#1db954` (Spotify Green)
 - **Background**: `#0a0a0a` (Deep Black)
-- **UI Style**: Spotify-style dark theme
-- **Component Library**: shadcn/ui (New York style)
+- **UI Style**: Spotify-style dark theme, shadcn/ui (New York)
 - **Icons**: Lucide React
 
-## License
+## Docs Index
 
-MIT License
+| Document | Description |
+|----------|-------------|
+| [docs/ChangeLog.md](docs/ChangeLog.md) | 变更日志 |
+| [docs/COMMON_ERRORS.md](docs/COMMON_ERRORS.md) | 常见错误与经验总结 |

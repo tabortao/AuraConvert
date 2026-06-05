@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAudioInfo } from "../hooks/useAudioInfo";
 import { useConversionStore } from "../stores/conversionStore";
 import { formatFileSize, formatDuration } from "../utils/fileUtils";
-import { open } from "@tauri-apps/plugin-shell";
+import { invoke } from "@tauri-apps/api/core";
 import {
   CheckCircle,
   XCircle,
@@ -44,11 +44,8 @@ export function FileItem({ file, index }: FileItemProps) {
 
   const handleOpenFolder = async () => {
     try {
-      // Get the parent directory
       const path = file.outputPath || file.path;
-      const lastSep = Math.max(path.lastIndexOf("\\"), path.lastIndexOf("/"));
-      const folderPath = lastSep > 0 ? path.substring(0, lastSep) : path;
-      await open(folderPath);
+      await invoke("open_folder", { path });
     } catch (e) {
       console.error("Failed to open folder:", e);
     }

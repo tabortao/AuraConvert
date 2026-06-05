@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { invoke } from "@tauri-apps/api/core";
 import { TitleBar } from "./TitleBar";
 import { SettingsPanel } from "./SettingsPanel";
 import { DropZone } from "./DropZone";
@@ -28,6 +29,7 @@ export function Layout() {
   const isConverting = useConversionStore((s) => s.isConverting);
   const clearFiles = useConversionStore((s) => s.clearFiles);
   const [isDragOver, setIsDragOver] = useState(false);
+  const isProcessingDrop = useRef(false);
 
   // Tauri v2 native drag-drop handler
   useEffect(() => {
@@ -45,6 +47,10 @@ export function Layout() {
             setIsDragOver(false);
           } else if (type === "drop") {
             setIsDragOver(false);
+            // Guard against duplicate drop events (race condition)
+            if (isProcessingDrop.current) return;
+            isProcessingDrop.current = true;
+            
             const paths = event.payload.paths;
             
             if (paths.length > 0) {
@@ -52,31 +58,42 @@ export function Layout() {
               const { addFiles, files } = useConversionStore.getState();
               const existingPaths = new Set(files.map((f) => f.path));
               
-              const newFiles = paths
-                .filter((p) => {
-                  const ext = p.split(".").pop()?.toLowerCase() || "";
-                  return SUPPORTED_EXTENSIONS.includes(ext);
-                })
-                .filter((p) => !existingPaths.has(p)) // deduplicate
-                .map((p) => {
-                  const name = p.split(/[\\/]/).pop() || p;
-                  const extension = name.split(".").pop()?.toLowerCase() || "";
-                  return {
-                    id: crypto.randomUUID(),
-                    path: p,
-                    name,
-                    extension,
-                    size: 0,
-                    isVideo: VIDEO_EXTENSIONS.includes(extension),
-                    status: "pending" as const,
-                    progress: 0,
-                  };
-                });
+              const newFiles = await Promise.all(
+                paths
+                  .filter((p) => {
+                    const ext = p.split(".").pop()?.toLowerCase() || "";
+                    return SUPPORTED_EXTENSIONS.includes(ext);
+                  })
+                  .filter((p) => !existingPaths.has(p)) // deduplicate
+                  .map(async (p) => {
+                    const name = p.split(/[\\/]/).pop() || p;
+                    const extension = name.split(".").pop()?.toLowerCase() || "";
+                    let size = 0;
+                    try {
+                      const meta = await invoke<{ size: number }>("get_file_metadata", { path: p });
+                      size = meta.size;
+                    } catch {
+                      // fallback
+                    }
+                    return {
+                      id: crypto.randomUUID(),
+                      path: p,
+                      name,
+                      extension,
+                      size,
+                      isVideo: VIDEO_EXTENSIONS.includes(extension),
+                      status: "pending" as const,
+                      progress: 0,
+                    };
+                  })
+              );
               
               if (newFiles.length > 0) {
                 addFiles(newFiles);
               }
             }
+            
+            isProcessingDrop.current = false;
           }
         });
       } catch (e) {

@@ -134,3 +134,32 @@ pub async fn select_ffmpeg_exe(app: tauri::AppHandle) -> Result<Option<String>, 
     
     Ok(selected.map(|p| p.to_string()))
 }
+
+#[tauri::command]
+pub async fn open_folder(path: String) -> Result<(), String> {
+    let folder_path = Path::new(&path);
+    let parent = if folder_path.is_dir() {
+        folder_path.to_path_buf()
+    } else {
+        folder_path.parent().map(|p| p.to_path_buf()).unwrap_or_default()
+    };
+    
+    if !parent.as_os_str().is_empty() {
+        #[cfg(target_os = "windows")]
+        {
+            std::process::Command::new("explorer")
+                .arg(parent.to_str().unwrap_or(""))
+                .spawn()
+                .map_err(|e| format!("Failed to open folder: {}", e))?;
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            std::process::Command::new("open")
+                .arg(parent.to_str().unwrap_or(""))
+                .spawn()
+                .map_err(|e| format!("Failed to open folder: {}", e))?;
+        }
+    }
+    
+    Ok(())
+}
