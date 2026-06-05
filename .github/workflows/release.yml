@@ -7,12 +7,30 @@ on:
         description: "Version tag (e.g. v1.1.6)"
         required: true
         type: string
+  release:
+    types: [published]
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      tag_name: ${{ steps.resolve.outputs.tag_name }}
+    steps:
+      - name: Resolve version
+        id: resolve
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "tag_name=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag_name=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          fi
+
   prepare-release:
+    needs: setup
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -27,7 +45,7 @@ jobs:
         id: release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG_NAME: ${{ github.event.inputs.version }}
+          TAG_NAME: ${{ needs.setup.outputs.tag_name }}
         run: |
           ver="$(echo "$TAG_NAME" | sed 's/^v//')"
           cat > release-body.md << EOF
@@ -66,7 +84,11 @@ jobs:
           done
 
   build-windows:
-    needs: prepare-release
+    needs: [setup, prepare-release]
+    if: |
+      always() &&
+      (needs.setup.result == 'success') &&
+      (needs.prepare-release.result == 'success' || needs.prepare-release.result == 'skipped')
     runs-on: windows-latest
     permissions:
       contents: write
@@ -79,18 +101,18 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: latest
+      - name: Enable pnpm
+        run: corepack enable pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Set version
         shell: pwsh
+        env:
+          TAG_NAME: ${{ needs.setup.outputs.tag_name }}
         run: |
-          $ver = "${{ github.event.inputs.version }}" -replace '^v', ''
+          $ver = $env:TAG_NAME -replace '^v', ''
           @'
           const fs = require("fs");
           const ver = process.argv[2];
@@ -216,15 +238,17 @@ jobs:
 
       - name: Rename portable binary
         shell: pwsh
+        env:
+          TAG_NAME: ${{ needs.setup.outputs.tag_name }}
         run: |
-          $ver = "${{ github.event.inputs.version }}" -replace '^v', ''
+          $ver = $env:TAG_NAME -replace '^v', ''
           Copy-Item src-tauri/target/release/aura-convert.exe "AuraConvert_$ver.exe"
 
       - name: Upload release assets
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG_NAME: ${{ github.event.inputs.version }}
+          TAG_NAME: ${{ needs.setup.outputs.tag_name }}
         run: |
           $ver = $env:TAG_NAME -replace '^v', ''
           $releaseDir = 'release-assets'
@@ -247,7 +271,11 @@ jobs:
           gh release upload $env:TAG_NAME $files --clobber --repo $env:GITHUB_REPOSITORY
 
   build-linux:
-    needs: prepare-release
+    needs: [setup, prepare-release]
+    if: |
+      always() &&
+      (needs.setup.result == 'success') &&
+      (needs.prepare-release.result == 'success' || needs.prepare-release.result == 'skipped')
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -260,10 +288,8 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: latest
+      - name: Enable pnpm
+        run: corepack enable pnpm
 
       - name: Install system dependencies
         run: |
@@ -274,8 +300,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Set version
+        env:
+          TAG_NAME: ${{ needs.setup.outputs.tag_name }}
         run: |
-          ver="$(echo '${{ github.event.inputs.version }}' | sed 's/^v//')"
+          ver="$(echo "$TAG_NAME" | sed 's/^v//')"
           cat > set-version.cjs << 'SCRIPT'
           const fs = require("fs");
           const ver = process.argv[2];
@@ -294,7 +322,7 @@ jobs:
       - name: Upload release assets
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG_NAME: ${{ github.event.inputs.version }}
+          TAG_NAME: ${{ needs.setup.outputs.tag_name }}
         run: |
           ver="$(echo "$TAG_NAME" | sed 's/^v//')"
           mkdir -p release-assets
@@ -327,7 +355,11 @@ jobs:
           gh release upload "$TAG_NAME" release-assets/* --clobber --repo "$GITHUB_REPOSITORY"
 
   build-macos-x86_64:
-    needs: prepare-release
+    needs: [setup, prepare-release]
+    if: |
+      always() &&
+      (needs.setup.result == 'success') &&
+      (needs.prepare-release.result == 'success' || needs.prepare-release.result == 'skipped')
     runs-on: macos-15-intel
     permissions:
       contents: write
@@ -342,17 +374,17 @@ jobs:
         with:
           targets: x86_64-apple-darwin
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: latest
+      - name: Enable pnpm
+        run: corepack enable pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Set version & disable signing
+        env:
+          TAG_NAME: ${{ needs.setup.outputs.tag_name }}
         run: |
-          ver="$(echo '${{ github.event.inputs.version }}' | sed 's/^v//')"
+          ver="$(echo "$TAG_NAME" | sed 's/^v//')"
           cat > set-version.cjs << 'SCRIPT'
           const fs = require("fs");
           const ver = process.argv[2];
@@ -373,7 +405,7 @@ jobs:
       - name: Upload release assets
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG_NAME: ${{ github.event.inputs.version }}
+          TAG_NAME: ${{ needs.setup.outputs.tag_name }}
         run: |
           ver="$(echo "$TAG_NAME" | sed 's/^v//')"
           mkdir -p release-assets
@@ -388,7 +420,11 @@ jobs:
           gh release upload "$TAG_NAME" "$dmg_asset" --clobber --repo "$GITHUB_REPOSITORY"
 
   build-macos-aarch64:
-    needs: prepare-release
+    needs: [setup, prepare-release]
+    if: |
+      always() &&
+      (needs.setup.result == 'success') &&
+      (needs.prepare-release.result == 'success' || needs.prepare-release.result == 'skipped')
     runs-on: macos-15
     permissions:
       contents: write
@@ -403,17 +439,17 @@ jobs:
         with:
           targets: aarch64-apple-darwin
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: latest
+      - name: Enable pnpm
+        run: corepack enable pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Set version & disable signing
+        env:
+          TAG_NAME: ${{ needs.setup.outputs.tag_name }}
         run: |
-          ver="$(echo '${{ github.event.inputs.version }}' | sed 's/^v//')"
+          ver="$(echo "$TAG_NAME" | sed 's/^v//')"
           cat > set-version.cjs << 'SCRIPT'
           const fs = require("fs");
           const ver = process.argv[2];
@@ -434,7 +470,7 @@ jobs:
       - name: Upload release assets
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG_NAME: ${{ github.event.inputs.version }}
+          TAG_NAME: ${{ needs.setup.outputs.tag_name }}
         run: |
           ver="$(echo "$TAG_NAME" | sed 's/^v//')"
           mkdir -p release-assets
@@ -449,8 +485,11 @@ jobs:
           gh release upload "$TAG_NAME" "$dmg_asset" --clobber --repo "$GITHUB_REPOSITORY"
 
   cleanup-release:
-    needs: [prepare-release, build-windows, build-linux, build-macos-x86_64, build-macos-aarch64]
-    if: failure() && needs.prepare-release.outputs.created == 'true'
+    needs: [setup, prepare-release, build-windows, build-linux, build-macos-x86_64, build-macos-aarch64]
+    if: |
+      failure() &&
+      needs.prepare-release.result == 'success' &&
+      needs.prepare-release.outputs.created == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -458,6 +497,6 @@ jobs:
       - name: Delete draft release after failed build
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG_NAME: ${{ github.event.inputs.version }}
+          TAG_NAME: ${{ needs.setup.outputs.tag_name }}
         run: |
           gh release delete "$TAG_NAME" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes || true

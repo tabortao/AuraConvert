@@ -35,7 +35,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - **README multi-language**: Added `README.md` (English) and `README.zh-CN.md` (Chinese) with mutual links
 - **Language dropdown**: Fixed dropdown disappearing when moving cursor to menu items by adding `pt-1` bridge
 - **Taskbar icon**: Regenerated `icon.ico` with proper multi-resolution sizes via `tauri icon` command
-- **GitHub Actions**: Added `release.yml` workflow for automated multi-platform release builds
+- **GitHub Actions**: Added `release.yml` workflow for automated multi-platform release builds (manual `workflow_dispatch` + auto on `release: published`)
 
 ## [v1.0.2] - 2026-06-03
 
