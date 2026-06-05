@@ -8,12 +8,12 @@ AuraConvert is a cross-platform desktop audio converter built with Tauri v2, Rus
 
 ## Rules
 
-- **版本号管理**: 同一天的所有更新合并到同一个版本号中记录，避免版本号过多。如需追加内容，更新已有版本的 entry。
-- **包管理**: 使用 pnpm，不使用 npm。
-- **变更记录**: 每次任务完成后，在 `docs/ChangeLog.md` 中使用英语更新，格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)。
-- **构建**: 从 `src-tauri` 子目录使用 `cargo build --release`，完整打包使用 `pnpm tauri build`。
-- **FFmpeg**: 使用 FFmpeg 8.1.1 essentials build，不支持 DTS/WMA/TTA/aptX/SBC/TrueHD/MLP/DFPWM 编码器。
-- **常见错误**: 常见错误、多次提问最终解决的错误，需要写入 `docs/COMMON_ERRORS.md` 中，避免重复错误再犯。
+- **Version Management**: All updates on the same day are merged into the same version number to avoid excessive version numbers. If additional content is needed, update the existing version entry.
+- **Package Management**: Use pnpm, not npm.
+- **Changelog**: After each task is completed, update in `docs/ChangeLog.md` in English, following the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format.
+- **Build**: Use `cargo build --release` from the `src-tauri` subdirectory, and `pnpm tauri build` for full packaging.
+- **FFmpeg**: Uses FFmpeg 8.1.1 essentials build, does not support DTS/WMA/TTA/aptX/SBC/TrueHD/MLP/DFPWM encoders.
+- **Common Errors**: Common errors and errors resolved after multiple inquiries should be documented in `docs/COMMON_ERRORS.md` to avoid repeating the same mistakes.
 
 ## Tech Stack
 

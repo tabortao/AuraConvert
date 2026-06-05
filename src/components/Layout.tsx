@@ -181,7 +181,8 @@ export function Layout() {
             <Languages size={15} />
           </button>
           {/* Dropdown */}
-          <div className="absolute right-0 top-full z-50 mt-1 hidden min-w-[100px] rounded-md border border-border bg-card py-1 shadow-lg group-hover:block">
+          <div className="absolute right-0 top-full z-50 pt-1 hidden group-hover:block">
+            <div className="min-w-[100px] rounded-md border border-border bg-card py-1 shadow-lg">
             <button
               onClick={() => {
                 i18n.changeLanguage("zh");
@@ -204,6 +205,7 @@ export function Layout() {
             >
               {t("language.en")}
             </button>
+            </div>
           </div>
         </div>
         {/* GitHub Link */}
