@@ -11,7 +11,7 @@ on:
     types: [published]
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE22: true
 
 jobs:
   setup:
@@ -97,15 +97,12 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: "24"
+          node-version: "22"
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - name: Enable pnpm
-        run: corepack enable
-
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Set version
         shell: pwsh
@@ -234,7 +231,7 @@ jobs:
           Write-Host "Tauri NSIS toolchain is ready at $nsisPath"
 
       - name: Build
-        run: pnpm tauri build
+        run: npm run tauri build
 
       - name: Rename portable binary
         shell: pwsh
@@ -284,12 +281,9 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: "24"
+          node-version: "22"
 
       - uses: dtolnay/rust-toolchain@stable
-
-      - name: Enable pnpm
-        run: corepack enable
 
       - name: Install system dependencies
         run: |
@@ -297,7 +291,7 @@ jobs:
           sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf libssl-dev libxdo-dev
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Set version
         env:
@@ -317,7 +311,7 @@ jobs:
           node set-version.cjs "$ver"
 
       - name: Build
-        run: pnpm tauri build
+        run: npm run tauri build
 
       - name: Upload release assets
         env:
@@ -368,17 +362,14 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: "24"
+          node-version: "22"
 
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-apple-darwin
 
-      - name: Enable pnpm
-        run: corepack enable
-
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Set version & disable signing
         env:
@@ -400,7 +391,7 @@ jobs:
           node set-version.cjs "$ver"
 
       - name: Build
-        run: pnpm tauri build -- --target x86_64-apple-darwin
+        run: npm run tauri build -- --target x86_64-apple-darwin
 
       - name: Upload release assets
         env:
@@ -433,17 +424,14 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: "24"
+          node-version: "22"
 
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-darwin
 
-      - name: Enable pnpm
-        run: corepack enable
-
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Set version & disable signing
         env:
@@ -465,7 +453,7 @@ jobs:
           node set-version.cjs "$ver"
 
       - name: Build
-        run: pnpm tauri build -- --target aarch64-apple-darwin
+        run: npm run tauri build -- --target aarch64-apple-darwin
 
       - name: Upload release assets
         env:
