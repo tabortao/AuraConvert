@@ -97,7 +97,7 @@ pub fn get_format_config(format: &str) -> FormatConfig {
             default_sample_rate: Some(48000),
             max_sample_rate: Some(48000),
             supports_bit_depth: false,
-            extra_args: vec![],
+            extra_args: vec!["-strict", "-2"],
             format_flag: None,
         },
         "alac" => FormatConfig {

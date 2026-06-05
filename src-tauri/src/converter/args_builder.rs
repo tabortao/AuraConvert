@@ -12,6 +12,23 @@ pub struct ConvertParams {
     pub speed: Option<f64>,   // 0.25-4.00
 }
 
+/// Map bitrate (kbps) to Vorbis quality scale (0-10)
+/// Reference: https://wiki.xiph.org/Vorbis#Quality
+fn bitrate_to_vorbis_quality(bitrate_kbps: u32) -> u32 {
+    match bitrate_kbps {
+        0..=48 => 0,   // q0  ≈ 64kbps
+        49..=80 => 1,  // q1  ≈ 80kbps
+        81..=96 => 2,  // q2  ≈ 96kbps
+        97..=128 => 3, // q3  ≈ 112kbps (default)
+        129..=160 => 4,// q4  ≈ 128kbps
+        161..=192 => 5,// q5  ≈ 160kbps
+        193..=224 => 6,// q6  ≈ 192kbps
+        225..=256 => 7,// q7  ≈ 224kbps
+        257..=320 => 8,// q8  ≈ 256kbps
+        _ => 9,        // q9+ ≈ 320kbps+
+    }
+}
+
 /// Build FFmpeg command-line arguments from conversion parameters
 pub fn build_ffmpeg_args(
     input_path: &str,
@@ -22,6 +39,7 @@ pub fn build_ffmpeg_args(
 ) -> Vec<String> {
     let simple_formats = ["ac3", "eac3", "opus", "mp2"];
     let is_simple_format = simple_formats.contains(&format_config.extension);
+    let is_vorbis = format_config.extension == "ogg";
     
     let mut args: Vec<String> = vec![];
     
@@ -39,6 +57,76 @@ pub fn build_ffmpeg_args(
                 args.push(format!("{}k", bitrate));
             }
         }
+        
+        for extra in &format_config.extra_args {
+            args.push(extra.to_string());
+        }
+        
+        args.push(output_path.to_string());
+        
+        return args;
+    }
+    
+    // Vorbis/OGG: use quality-based encoding (-q:a) instead of bitrate (-b:a)
+    // libvorbis encoder is sensitive to -b:a parameter combinations;
+    // quality-based VBR encoding is the recommended approach
+    if is_vorbis {
+        args.push("-y".to_string());
+        args.push("-i".to_string());
+        args.push(input_path.to_string());
+        
+        // Map audio streams
+        args.push("-map".to_string());
+        args.push("0:a".to_string());
+        
+        // Copy cover art if available
+        args.push("-map".to_string());
+        args.push("0:v?".to_string());
+        args.push("-c:v".to_string());
+        args.push("copy".to_string());
+        args.push("-disposition:v".to_string());
+        args.push("attached_pic".to_string());
+        
+        // Build audio filter chain
+        let mut filters: Vec<String> = vec![];
+        if let Some(vol) = params.volume {
+            if vol != 100 {
+                let volume_factor = vol as f64 / 100.0;
+                filters.push(format!("volume={:.2}", volume_factor));
+            }
+        }
+        if let Some(speed) = params.speed {
+            if (speed - 1.0).abs() > 0.001 {
+                let mut remaining = speed;
+                while remaining > 2.0 {
+                    filters.push("atempo=2.0".to_string());
+                    remaining /= 2.0;
+                }
+                while remaining < 0.5 {
+                    filters.push("atempo=0.5".to_string());
+                    remaining /= 0.5;
+                }
+                filters.push(format!("atempo={:.4}", remaining));
+            }
+        }
+        if !filters.is_empty() {
+            args.push("-af".to_string());
+            args.push(filters.join(","));
+        }
+        
+        args.push("-c:a".to_string());
+        args.push(format_config.codec.to_string());
+        
+        // Use quality-based encoding: map bitrate to Vorbis quality scale
+        if let Some(bitrate) = params.bitrate {
+            let quality = bitrate_to_vorbis_quality(bitrate);
+            args.push("-q:a".to_string());
+            args.push(quality.to_string());
+        }
+        
+        // Preserve metadata
+        args.push("-map_metadata".to_string());
+        args.push("0".to_string());
         
         for extra in &format_config.extra_args {
             args.push(extra.to_string());

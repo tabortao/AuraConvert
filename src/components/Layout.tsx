@@ -37,7 +37,7 @@ export function Layout() {
       try {
         const appWindow = getCurrentWindow();
         unlisten = await appWindow.onDragDropEvent(async (event) => {
-          const { type, paths } = event.payload;
+          const { type } = event.payload;
           
           if (type === "enter" || type === "over") {
             setIsDragOver(true);
@@ -45,6 +45,7 @@ export function Layout() {
             setIsDragOver(false);
           } else if (type === "drop") {
             setIsDragOver(false);
+            const paths = event.payload.paths;
             
             if (paths.length > 0) {
               // Use getState to avoid stale closure / re-registration issues

@@ -1,5 +1,19 @@
 # Change Log
 
+## [v1.1.6] - 2026-06-04
+
+### Fixed
+
+- **OGG/Vorbis 转换错误**: 修复 MP3 转 OGG 时 libvorbis 编码器报错 `Error while opening encoder - maybe incorrect parameters` 的问题
+  - 根本原因: libvorbis 编码器对 `-b:a`（比特率模式）参数组合敏感，不兼容 `-ar`/`-ac` 强制参数
+  - 解决方案: OGG 格式改用 `-q:a` 质量模式编码（Vorbis 原生 VBR 质量标度 0-10），根据比特率自动映射质量值
+  - 映射关系: 32k→q0, 64k→q1, 96k→q2, 128k→q3, 160k→q4, 192k→q5, 224k→q6, 256k→q7, 320k→q8, 500k→q9
+- **Opus 实验性功能错误**: 修复原生 `opus` 编码器报 `Experimental feature` 错误
+  - 根本原因: FFmpeg 8.1.1 essentials build 中 `opus` 原生编码器仍标记为实验性
+  - 解决方案: Opus 格式添加 `-strict -2` 参数启用实验性编码器
+- **Tauri 构建 TypeScript 错误**: 修复 `DragDropEvent` 类型兼容性问题
+  - `DragDropEvent` 是联合类型，`paths` 属性仅存在于 `enter`/`drop` 变体，不在 `over`/`leave` 中
+
 ## [v1.1.5] - 2026-06-04
 
 ### Fixed
