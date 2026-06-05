@@ -1,9 +1,9 @@
 [package]
 name = "aura-convert"
-version = "1.0.0"
+version = "1.1.6"
 description = "A Lightweight & Professional Audio Converter Powered by Rust & Tauri"
 authors = ["AuraConvert"]
-edition = "2024"
+edition = "2026"
 
 [lib]
 name = "aura_convert_lib"

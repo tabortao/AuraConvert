@@ -31,6 +31,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - **批量转换**: 修复多文件转换时第二个文件失败的问题 (FfmpegRunner Clone 独立取消标志)
 - **文件选择**: 添加 `select_folder` 和 `get_file_metadata` 命令
 - **打开文件夹**: 修复 `open_folder` 按钮无反应，改用 Rust 原生 `explorer` 命令替代 `@tauri-apps/plugin-shell` 的 `open`
+- **多语言支持**: 添加语言切换器（工具栏 GitHub 图标左侧），自动检测系统语言，支持中文/英文切换
+- **README 多语言**: 新增 `README.md`（英文版）和 `README.zh-CN.md`（中文版），互相链接
 
 ## [v1.0.2] - 2026-06-03
 

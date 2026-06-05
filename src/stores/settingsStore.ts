@@ -39,6 +39,12 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       const settings = await store.get<Settings>("settings");
       if (settings) {
         set(settings);
+        if (settings.language) {
+          try {
+            const { default: i18n } = await import("../i18n");
+            i18n.changeLanguage(settings.language);
+          } catch {}
+        }
       }
     } catch {
       // Store not available yet

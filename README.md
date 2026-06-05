@@ -1,4 +1,4 @@
-# AuraConvert - 音擎
+# AuraConvert - AudioForge
 
 <p align="center">
   <img src="src-tauri/icons/icon.png" alt="AuraConvert Logo" width="128" height="128">
@@ -8,7 +8,7 @@
 
 <p align="center">
   A lightweight, professional audio converter powered by Rust & Tauri<br>
-  支持 13 种输出格式 · 批量转换 · 实时进度 · 视频音频提取
+  13 output formats · Batch conversion · Real-time progress · Video audio extraction
 </p>
 
 <p align="center">
@@ -16,6 +16,10 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"></a>
   <img src="https://img.shields.io/badge/platform-Windows-lightgrey?style=flat-square" alt="Platform">
   <a href="docs/ChangeLog.md"><img src="https://img.shields.io/badge/changelog-keep%20a%20changelog-1db954?style=flat-square" alt="Changelog"></a>
+</p>
+
+<p align="center">
+  <a href="README.zh-CN.md">中文</a>
 </p>
 
 ## Overview
@@ -53,7 +57,7 @@ The app is designed around a few practical ideas:
 - **Compression ratio**: Displayed after conversion
 - **Audio metadata**: View title, artist, album, cover art
 - **Dark theme**: Spotify-style dark UI (`#0a0a0a` background, `#1db954` accent)
-- **i18n**: Chinese / English language switching
+- **Multi-language**: Chinese / English
 - **Keyboard shortcuts**: `Ctrl+Enter` to convert, `Delete` to clear list
 
 ### FFmpeg Integration

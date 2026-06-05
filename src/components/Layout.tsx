@@ -11,8 +11,11 @@ import { useConversion } from "../hooks/useConversion";
 import { useConversionStore } from "../stores/conversionStore";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { useMemo } from "react";
-import { Github, Upload } from "lucide-react";
+import { Github, Upload, Languages } from "lucide-react";
 import { ToastContainer } from "./Toast";
+import { useTranslation } from "react-i18next";
+import i18n from "../i18n";
+import { useSettingsStore } from "../stores/settingsStore";
 
 const SUPPORTED_EXTENSIONS = [
   "mp3", "aac", "flac", "wav", "m4a", "ogg", "opus", "alac",
@@ -30,6 +33,15 @@ export function Layout() {
   const clearFiles = useConversionStore((s) => s.clearFiles);
   const [isDragOver, setIsDragOver] = useState(false);
   const isProcessingDrop = useRef(false);
+
+  const { t } = useTranslation();
+  const updateSetting = useSettingsStore((s) => s.updateSetting);
+  const loadSettings = useSettingsStore((s) => s.loadSettings);
+
+  // Load saved settings on mount
+  useEffect(() => {
+    loadSettings();
+  }, []);
 
   // Tauri v2 native drag-drop handler
   useEffect(() => {
@@ -159,6 +171,40 @@ export function Layout() {
             }`}
           />
           FFmpeg {status?.found ? "✓" : "✗"}
+        </div>
+        {/* Language Switcher */}
+        <div className="relative group">
+          <button
+            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            title={t("language.switch")}
+          >
+            <Languages size={15} />
+          </button>
+          {/* Dropdown */}
+          <div className="absolute right-0 top-full z-50 mt-1 hidden min-w-[100px] rounded-md border border-border bg-card py-1 shadow-lg group-hover:block">
+            <button
+              onClick={() => {
+                i18n.changeLanguage("zh");
+                updateSetting("language", "zh");
+              }}
+              className={`flex w-full items-center gap-2 px-3 py-1.5 text-xs transition-colors hover:bg-secondary ${
+                i18n.language === "zh" ? "text-primary font-medium" : "text-foreground"
+              }`}
+            >
+              {t("language.zh")}
+            </button>
+            <button
+              onClick={() => {
+                i18n.changeLanguage("en");
+                updateSetting("language", "en");
+              }}
+              className={`flex w-full items-center gap-2 px-3 py-1.5 text-xs transition-colors hover:bg-secondary ${
+                i18n.language === "en" ? "text-primary font-medium" : "text-foreground"
+              }`}
+            >
+              {t("language.en")}
+            </button>
+          </div>
         </div>
         {/* GitHub Link */}
         <a

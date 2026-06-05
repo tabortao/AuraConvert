@@ -101,5 +101,10 @@
   "theme": {
     "dark": "Dark theme",
     "light": "Light theme"
+  },
+  "language": {
+    "switch": "Switch language",
+    "zh": "中文",
+    "en": "English"
   }
 }

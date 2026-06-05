@@ -101,5 +101,10 @@
   "theme": {
     "dark": "暗色主题",
     "light": "亮色主题"
+  },
+  "language": {
+    "switch": "切换语言",
+    "zh": "中文",
+    "en": "English"
   }
 }
