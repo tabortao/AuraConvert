@@ -192,6 +192,14 @@ AuraConvert/
 - **UI Style**: Spotify-style dark theme, shadcn/ui (New York)
 - **Icons**: Lucide React
 
+## Articles
+
+> I spent half a year looking for a decent audio converter — in the end I just built one.
+
+- 📖 [微信公众号 (WeChat Official Account)](https://mp.weixin.qq.com/s/S-9kICTv0paTZKba145YKA)
+- 📖 [知乎 (Zhihu)](https://zhuanlan.zhihu.com/p/2049041956710491784)
+- 📖 [吾爱破解 (52pojie)](https://www.52pojie.cn/thread-2112569-1-1.html)
+
 ## Documentation
 
 | Document | Description |

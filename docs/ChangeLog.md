@@ -4,6 +4,12 @@ All notable changes to AuraConvert will be documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses semantic version tags.
 
+## [v1.1.7] - 2026-06-13
+
+### Added
+
+- **README articles section**: Added "Articles / 文章" section with self-introduction links (WeChat, Zhihu, 52pojie) to both `README.md` and `README.zh-CN.md`
+
 ## [v1.1.6] - 2026-06-04
 
 ### Added

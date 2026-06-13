@@ -192,6 +192,14 @@ AuraConvert/
 - **UI 风格**：Spotify 风格深色主题，shadcn/ui (New York)
 - **图标**：Lucide React
 
+## 文章
+
+> 找了半年都没合适的音频转换工具，我干脆自己写了一个。
+
+- 📖 [微信公众号](https://mp.weixin.qq.com/s/S-9kICTv0paTZKba145YKA)
+- 📖 [知乎](https://zhuanlan.zhihu.com/p/2049041956710491784)
+- 📖 [吾爱破解](https://www.52pojie.cn/thread-2112569-1-1.html)
+
 ## 文档
 
 | 文档 | 描述 |
