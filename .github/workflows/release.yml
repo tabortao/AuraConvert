@@ -49,11 +49,11 @@ jobs:
         run: |
           ver="$(echo "$TAG_NAME" | sed 's/^v//')"
           cat > release-body.md << EOF
-          Recommended download: \`AuraConvert_${ver}_x64-setup.exe\` (NSIS installer) or \`AuraConvert_${ver}_x64.msi\` (MSI installer).
-
-          With FFmpeg bundled: \`AuraConvert_${ver}_x64-setup-with-ffmpeg.exe\` (NSIS) / \`AuraConvert_${ver}_x64-with-ffmpeg.msi\` (MSI) / \`AuraConvert_${ver}-with-ffmpeg.exe\` (portable).
-
-          Portable version: \`AuraConvert_${ver}.exe\` (no installation required).
+          Recommended Windows downloads:
+          - NSIS installer: \`AuraConvert_${ver}_x64-setup.exe\`
+          - MSI installer: \`AuraConvert_${ver}_x64.msi\`
+          - With FFmpeg (NSIS): \`AuraConvert_${ver}_x64-setup-with-ffmpeg.exe\`
+          - With FFmpeg (MSI): \`AuraConvert_${ver}_x64-with-ffmpeg.msi\`
 
           macOS Apple Silicon: \`AuraConvert_${ver}_aarch64.dmg\`; macOS Intel: \`AuraConvert_${ver}_x64.dmg\`.
 
@@ -255,20 +255,13 @@ jobs:
           $releaseDir = 'release-assets'
           New-Item -ItemType Directory -Path $releaseDir -Force | Out-Null
 
-          # Save portable binary
-          Copy-Item src-tauri/target/release/aura-convert.exe "AuraConvert_$ver.exe"
-
           $setupSource = Get-ChildItem -Path 'src-tauri/target/release/bundle/nsis' -File -Recurse -Filter '*.exe' | Sort-Object Length -Descending | Select-Object -First 1
           if (-not $setupSource) {
             throw 'No Windows NSIS installer found.'
           }
-
           $setupAsset = Join-Path $releaseDir "AuraConvert_${ver}_x64-setup.exe"
-          $portableAsset = Join-Path $releaseDir "AuraConvert_${ver}.exe"
           Copy-Item $setupSource.FullName $setupAsset -Force
-          Copy-Item "AuraConvert_$ver.exe" $portableAsset -Force
 
-          # Save MSI
           $msiSource = Get-ChildItem -Path 'src-tauri/target/release/bundle/msi' -File -Recurse -Filter '*.msi' | Sort-Object Length -Descending | Select-Object -First 1
           if ($msiSource) {
             $msiAsset = Join-Path $releaseDir "AuraConvert_${ver}_x64.msi"
@@ -339,20 +332,13 @@ jobs:
           $ver = $env:TAG_NAME -replace '^v', ''
           $releaseDir = 'release-assets'
 
-          # Save portable binary with ffmpeg
-          Copy-Item src-tauri/target/release/aura-convert.exe "AuraConvert_${ver}-with-ffmpeg.exe"
-
           $setupSource = Get-ChildItem -Path 'src-tauri/target/release/bundle/nsis' -File -Recurse -Filter '*.exe' | Sort-Object Length -Descending | Select-Object -First 1
           if (-not $setupSource) {
             throw 'No Windows NSIS installer found (with ffmpeg).'
           }
-
           $setupAsset = Join-Path $releaseDir "AuraConvert_${ver}_x64-setup-with-ffmpeg.exe"
-          $portableAsset = Join-Path $releaseDir "AuraConvert_${ver}-with-ffmpeg.exe"
           Copy-Item $setupSource.FullName $setupAsset -Force
-          Copy-Item "AuraConvert_${ver}-with-ffmpeg.exe" $portableAsset -Force
 
-          # Save MSI with ffmpeg
           $msiSource = Get-ChildItem -Path 'src-tauri/target/release/bundle/msi' -File -Recurse -Filter '*.msi' | Sort-Object Length -Descending | Select-Object -First 1
           if ($msiSource) {
             $msiAsset = Join-Path $releaseDir "AuraConvert_${ver}_x64-with-ffmpeg.msi"
@@ -361,12 +347,9 @@ jobs:
             Write-Warning 'No MSI installer found (with ffmpeg).'
           }
 
-          # Upload all assets
           $files = @(
             (Resolve-Path (Join-Path $releaseDir "AuraConvert_${ver}_x64-setup.exe")).Path,
-            (Resolve-Path (Join-Path $releaseDir "AuraConvert_${ver}.exe")).Path,
-            (Resolve-Path (Join-Path $releaseDir "AuraConvert_${ver}_x64-setup-with-ffmpeg.exe")).Path,
-            (Resolve-Path (Join-Path $releaseDir "AuraConvert_${ver}-with-ffmpeg.exe")).Path
+            (Resolve-Path (Join-Path $releaseDir "AuraConvert_${ver}_x64-setup-with-ffmpeg.exe")).Path
           )
           if (Test-Path (Join-Path $releaseDir "AuraConvert_${ver}_x64.msi")) {
             $files += (Resolve-Path (Join-Path $releaseDir "AuraConvert_${ver}_x64.msi")).Path
