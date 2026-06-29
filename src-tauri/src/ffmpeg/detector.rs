@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 use tauri::AppHandle;
+use tauri::Manager;
 use tauri_plugin_store::StoreExt;
 
 pub struct FfmpegDetector {
@@ -12,32 +13,52 @@ impl FfmpegDetector {
     }
 
     /// Detect FFmpeg with priority chain:
-    /// 1. User configured path (from store)
-    /// 2. System PATH (where/which command)
-    /// 3. Windows registry
-    /// 4. Common install locations
+    /// 1. Bundled with app (resource directory)
+    /// 2. User configured path (from store)
+    /// 3. System PATH (where/which command)
+    /// 4. Windows registry
+    /// 5. Common install locations
     pub async fn detect(&self) -> Option<PathBuf> {
-        // 1. Check user configured path
+        // 1. Check bundled ffmpeg
+        if let Some(path) = self.check_bundled() {
+            return Some(path);
+        }
+
+        // 2. Check user configured path
         if let Some(path) = self.check_user_config() {
             return Some(path);
         }
 
-        // 2. Check system PATH
+        // 3. Check system PATH
         if let Some(path) = self.check_path().await {
             return Some(path);
         }
 
-        // 3. Check Windows registry
+        // 4. Check Windows registry
         #[cfg(target_os = "windows")]
         if let Some(path) = self.check_registry() {
             return Some(path);
         }
 
-        // 4. Check common install locations
+        // 5. Check common install locations
         if let Some(path) = self.check_common_paths() {
             return Some(path);
         }
 
+        None
+    }
+
+    fn check_bundled(&self) -> Option<PathBuf> {
+        let resource_dir = self.app.path().resource_dir().ok()?;
+        let ffmpeg_path = resource_dir
+            .join("bin")
+            .join("ffmpeg")
+            .join("ffmpeg")
+            .with_extension(std::env::consts::EXE_SUFFIX);
+        if ffmpeg_path.exists() {
+            log::info!("Using bundled ffmpeg: {:?}", ffmpeg_path);
+            return Some(ffmpeg_path);
+        }
         None
     }
 

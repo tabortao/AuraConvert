@@ -56,7 +56,7 @@ export function TitleBar() {
         <span className={`text-[13px] font-medium ${isDark ? "text-white/70" : "text-white/90"}`}>
           AuraConvert
         </span>
-        <span className={`text-[11px] ${isDark ? "text-white/30" : "text-white/50"}`}>v1.1.6</span>
+        <span className={`text-[11px] ${isDark ? "text-white/30" : "text-white/50"}`}>v1.1.8</span>
       </div>
 
       {/* Right: Theme toggle + Window controls */}

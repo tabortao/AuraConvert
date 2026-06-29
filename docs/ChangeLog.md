@@ -4,6 +4,19 @@ All notable changes to AuraConvert will be documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses semantic version tags.
 
+## [v1.1.8] - 2026-06-29
+
+### Added
+
+- **Bundled FFmpeg**: Windows release now offers a variant with FFmpeg and FFprobe bundled (`-with-ffmpeg` suffix), auto-detected from the app's resource directory as the highest priority source
+- **Dual Windows builds**: CI pipeline builds both standard (no FFmpeg) and bundled-FFmpeg Windows installers (NSIS + MSI) and portable binaries
+- **MSI installer**: Windows release now also produces MSI installers alongside NSIS
+- **CI auto-download FFmpeg**: Release workflow downloads FFmpeg essentials build from gyan.dev instead of storing binaries in the repository
+
+### Changed
+
+- **FFmpeg detection priority**: Bundled FFmpeg is now checked first, before user-configured path, system PATH, registry, and common install locations
+
 ## [v1.1.7] - 2026-06-13
 
 ### Added

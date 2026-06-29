@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version tag (e.g. v1.1.6)"
+        description: "Version tag (e.g. v1.1.8)"
         required: true
         type: string
   release:
@@ -49,7 +49,9 @@ jobs:
         run: |
           ver="$(echo "$TAG_NAME" | sed 's/^v//')"
           cat > release-body.md << EOF
-          Recommended download: \`AuraConvert_${ver}_x64-setup.exe\` (Windows installer).
+          Recommended download: \`AuraConvert_${ver}_x64-setup.exe\` (NSIS installer) or \`AuraConvert_${ver}_x64.msi\` (MSI installer).
+
+          With FFmpeg bundled: \`AuraConvert_${ver}_x64-setup-with-ffmpeg.exe\` (NSIS) / \`AuraConvert_${ver}_x64-with-ffmpeg.msi\` (MSI) / \`AuraConvert_${ver}-with-ffmpeg.exe\` (portable).
 
           Portable version: \`AuraConvert_${ver}.exe\` (no installation required).
 
@@ -104,7 +106,7 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Set version
+      - name: Set version (without ffmpeg)
         shell: pwsh
         env:
           TAG_NAME: ${{ needs.setup.outputs.tag_name }}
@@ -115,6 +117,7 @@ jobs:
           const ver = process.argv[2];
           const conf = JSON.parse(fs.readFileSync("src-tauri/tauri.conf.json", "utf8"));
           conf.version = ver;
+          conf.bundle.resources = [];
           fs.writeFileSync("src-tauri/tauri.conf.json", JSON.stringify(conf, null, 2));
           let toml = fs.readFileSync("src-tauri/Cargo.toml", "utf8");
           toml = toml.replace(/^version = "[^"]*"/m, 'version = "' + ver + '"');
@@ -230,26 +233,30 @@ jobs:
 
           Write-Host "Tauri NSIS toolchain is ready at $nsisPath"
 
-      - name: Build
+      - name: Install WiX Toolset
+        shell: pwsh
+        run: |
+          if (-not (Get-Command "candle.exe" -ErrorAction SilentlyContinue)) {
+            Write-Host "Installing WiX Toolset v3..."
+            choco install wixtoolset -y --version=3.11.2
+          } else {
+            Write-Host "WiX Toolset already installed."
+          }
+
+      - name: Build (without ffmpeg)
         run: npm run tauri build
 
-      - name: Rename portable binary
+      - name: Save standard assets
         shell: pwsh
         env:
-          TAG_NAME: ${{ needs.setup.outputs.tag_name }}
-        run: |
-          $ver = $env:TAG_NAME -replace '^v', ''
-          Copy-Item src-tauri/target/release/aura-convert.exe "AuraConvert_$ver.exe"
-
-      - name: Upload release assets
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
           TAG_NAME: ${{ needs.setup.outputs.tag_name }}
         run: |
           $ver = $env:TAG_NAME -replace '^v', ''
           $releaseDir = 'release-assets'
           New-Item -ItemType Directory -Path $releaseDir -Force | Out-Null
+
+          # Save portable binary
+          Copy-Item src-tauri/target/release/aura-convert.exe "AuraConvert_$ver.exe"
 
           $setupSource = Get-ChildItem -Path 'src-tauri/target/release/bundle/nsis' -File -Recurse -Filter '*.exe' | Sort-Object Length -Descending | Select-Object -First 1
           if (-not $setupSource) {
@@ -261,10 +268,112 @@ jobs:
           Copy-Item $setupSource.FullName $setupAsset -Force
           Copy-Item "AuraConvert_$ver.exe" $portableAsset -Force
 
+          # Save MSI
+          $msiSource = Get-ChildItem -Path 'src-tauri/target/release/bundle/msi' -File -Recurse -Filter '*.msi' | Sort-Object Length -Descending | Select-Object -First 1
+          if ($msiSource) {
+            $msiAsset = Join-Path $releaseDir "AuraConvert_${ver}_x64.msi"
+            Copy-Item $msiSource.FullName $msiAsset -Force
+          } else {
+            Write-Warning 'No MSI installer found.'
+          }
+
+      - name: Set version & add ffmpeg resources
+        shell: pwsh
+        env:
+          TAG_NAME: ${{ needs.setup.outputs.tag_name }}
+        run: |
+          $ver = $env:TAG_NAME -replace '^v', ''
+          @'
+          const fs = require("fs");
+          const ver = process.argv[2];
+          const conf = JSON.parse(fs.readFileSync("src-tauri/tauri.conf.json", "utf8"));
+          conf.version = ver;
+          conf.bundle.resources = ["bin/ffmpeg/ffmpeg.exe", "bin/ffmpeg/ffprobe.exe"];
+          fs.writeFileSync("src-tauri/tauri.conf.json", JSON.stringify(conf, null, 2));
+          let toml = fs.readFileSync("src-tauri/Cargo.toml", "utf8");
+          toml = toml.replace(/^version = "[^"]*"/m, 'version = "' + ver + '"');
+          fs.writeFileSync("src-tauri/Cargo.toml", toml);
+          '@ | Out-File -Encoding utf8 set-version-ffmpeg.cjs
+          node set-version-ffmpeg.cjs $ver
+
+      - name: Download FFmpeg (essentials build)
+        shell: pwsh
+        run: |
+          $binDir = "src-tauri/bin/ffmpeg"
+          New-Item -ItemType Directory -Path $binDir -Force | Out-Null
+
+          $ffmpegUrl = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
+          $zipPath = Join-Path $env:RUNNER_TEMP "ffmpeg.zip"
+
+          for ($attempt = 1; $attempt -le 5; $attempt++) {
+            try {
+              if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
+              Write-Host "Downloading $ffmpegUrl (attempt $attempt/5)"
+              Invoke-WebRequest -Uri $ffmpegUrl -OutFile $zipPath -TimeoutSec 300
+              break
+            } catch {
+              Write-Warning $_
+              if ($attempt -eq 5) { throw }
+              Start-Sleep -Seconds (10 * $attempt)
+            }
+          }
+
+          Expand-Archive -Path $zipPath -DestinationPath $env:RUNNER_TEMP -Force
+          $extractedRoot = (Get-ChildItem -Path (Join-Path $env:RUNNER_TEMP "ffmpeg-*-essentials_build") | Select-Object -First 1).FullName
+          $binPath = Join-Path $extractedRoot "bin"
+
+          Copy-Item (Join-Path $binPath "ffmpeg.exe") (Join-Path $binDir "ffmpeg.exe") -Force
+          Copy-Item (Join-Path $binPath "ffprobe.exe") (Join-Path $binDir "ffprobe.exe") -Force
+
+          Write-Host "FFmpeg downloaded: $((Get-Item (Join-Path $binDir 'ffmpeg.exe')).Length) bytes"
+
+      - name: Build (with ffmpeg)
+        run: npm run tauri build
+
+      - name: Save with-ffmpeg assets & upload all
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ needs.setup.outputs.tag_name }}
+        run: |
+          $ver = $env:TAG_NAME -replace '^v', ''
+          $releaseDir = 'release-assets'
+
+          # Save portable binary with ffmpeg
+          Copy-Item src-tauri/target/release/aura-convert.exe "AuraConvert_${ver}-with-ffmpeg.exe"
+
+          $setupSource = Get-ChildItem -Path 'src-tauri/target/release/bundle/nsis' -File -Recurse -Filter '*.exe' | Sort-Object Length -Descending | Select-Object -First 1
+          if (-not $setupSource) {
+            throw 'No Windows NSIS installer found (with ffmpeg).'
+          }
+
+          $setupAsset = Join-Path $releaseDir "AuraConvert_${ver}_x64-setup-with-ffmpeg.exe"
+          $portableAsset = Join-Path $releaseDir "AuraConvert_${ver}-with-ffmpeg.exe"
+          Copy-Item $setupSource.FullName $setupAsset -Force
+          Copy-Item "AuraConvert_${ver}-with-ffmpeg.exe" $portableAsset -Force
+
+          # Save MSI with ffmpeg
+          $msiSource = Get-ChildItem -Path 'src-tauri/target/release/bundle/msi' -File -Recurse -Filter '*.msi' | Sort-Object Length -Descending | Select-Object -First 1
+          if ($msiSource) {
+            $msiAsset = Join-Path $releaseDir "AuraConvert_${ver}_x64-with-ffmpeg.msi"
+            Copy-Item $msiSource.FullName $msiAsset -Force
+          } else {
+            Write-Warning 'No MSI installer found (with ffmpeg).'
+          }
+
+          # Upload all assets
           $files = @(
-            (Resolve-Path $setupAsset).Path,
-            (Resolve-Path $portableAsset).Path
+            (Resolve-Path (Join-Path $releaseDir "AuraConvert_${ver}_x64-setup.exe")).Path,
+            (Resolve-Path (Join-Path $releaseDir "AuraConvert_${ver}.exe")).Path,
+            (Resolve-Path (Join-Path $releaseDir "AuraConvert_${ver}_x64-setup-with-ffmpeg.exe")).Path,
+            (Resolve-Path (Join-Path $releaseDir "AuraConvert_${ver}-with-ffmpeg.exe")).Path
           )
+          if (Test-Path (Join-Path $releaseDir "AuraConvert_${ver}_x64.msi")) {
+            $files += (Resolve-Path (Join-Path $releaseDir "AuraConvert_${ver}_x64.msi")).Path
+          }
+          if (Test-Path (Join-Path $releaseDir "AuraConvert_${ver}_x64-with-ffmpeg.msi")) {
+            $files += (Resolve-Path (Join-Path $releaseDir "AuraConvert_${ver}_x64-with-ffmpeg.msi")).Path
+          }
           gh release upload $env:TAG_NAME $files --clobber --repo $env:GITHUB_REPOSITORY
 
   build-linux:

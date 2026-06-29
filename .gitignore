@@ -50,3 +50,4 @@ docs/Reference/doc-ffmpeg-8.1.1-essentials_build/*
 
 # Bundle outputs
 src-tauri/target/release/bundle/
+src-tauri/bin/ffmpeg/
