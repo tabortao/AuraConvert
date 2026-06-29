@@ -112,12 +112,14 @@ jobs:
           TAG_NAME: ${{ needs.setup.outputs.tag_name }}
         run: |
           $ver = $env:TAG_NAME -replace '^v', ''
+          # MSI target rejects non-numeric pre-release suffixes (e.g. "-beta.1")
+          $msiVer = $ver -replace '-.*$', ''
           @'
           const fs = require("fs");
-          const ver = process.argv[2];
+          const raw = process.argv[2];
+          const ver = raw.replace(/-.*$/, "");
           const conf = JSON.parse(fs.readFileSync("src-tauri/tauri.conf.json", "utf8"));
           conf.version = ver;
-          conf.bundle.resources = [];
           fs.writeFileSync("src-tauri/tauri.conf.json", JSON.stringify(conf, null, 2));
           let toml = fs.readFileSync("src-tauri/Cargo.toml", "utf8");
           toml = toml.replace(/^version = "[^"]*"/m, 'version = "' + ver + '"');
@@ -276,9 +278,11 @@ jobs:
           TAG_NAME: ${{ needs.setup.outputs.tag_name }}
         run: |
           $ver = $env:TAG_NAME -replace '^v', ''
+          $msiVer = $ver -replace '-.*$', ''
           @'
           const fs = require("fs");
-          const ver = process.argv[2];
+          const raw = process.argv[2];
+          const ver = raw.replace(/-.*$/, "");
           const conf = JSON.parse(fs.readFileSync("src-tauri/tauri.conf.json", "utf8"));
           conf.version = ver;
           conf.bundle.resources = ["bin/ffmpeg/ffmpeg.exe", "bin/ffmpeg/ffprobe.exe"];
